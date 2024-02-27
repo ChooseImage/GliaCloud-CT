@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <!-- {% load static %} -->
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <title>{{ object.content.title }}</title>
+        
+        <link rel="icon" href="data:image/svg+xml,
+            <svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22>
+                <text y=%22.9em%22 font-size=%2290%22>✍️</text>
+            </svg>
+            ">
+        </head>
+        <body>
+            <iframe src="https://wallpapers.com/images/hd/plain-black-background-02fh7564l8qq4m6d.jpg"></iframe>
+            <!-- {% if object.state.value == 'approve' %}
+                <div>The content has been approved.</div>
+                <div id="button-container">
+                    {% for title, url in links.items %}
+                        <a class="link-button" href="{{ url }}">{{ title }}</a>
+                        {% if not forloop.last %}<span class="separator">/</span>{% endif %}
+                    {% endfor %}
+                </div>
+            {% else %} -->
+                <div id="timers">
+                    <span id="timer">Total <span class="minutes">00</span>:<span class="seconds">00</span></span>
+                    / <span id="focus-timer">Focus <span class="minutes">00</span>:<span class="seconds">00</span></span>
+                </div>
+                <div class="button-container">
+                    <form method="post">
+                        <!-- {% csrf_token %} -->
+                        <button id="approve-button" class="approve" type="button">Approve</button>
+                        <button id="reject-button" type="submit" name="action" value="reject">Reject</button>
+                    </form>
+                </div>
+            <!-- {% endif %} -->
+            <div id="approve-modal" class="modal">
+                <div class="modal-content">
+                    <h2>Approve Form</h2>
+                    <form id="approve-form" method="post">
+                        {% csrf_token %}
+                        <h4>QC spent time (mm:ss):</h4>
+                        <div class="form-row">
+                            <input type="text" name="time" value="00:00" pattern="^[0-9]+:[0-9]+$"></input>
+                        </div>
+                        <h4>QC edits:</h4>
+                        <div class="form-row">
+                            <div class="input-container">
+                                <input type="checkbox" id="line_and_scene" name="line_and_scene" value="true">
+                                <label for="line_and_scene">Line break and scene change（換行及換幕）</label><br>
+                                <input type="checkbox" id="wording_and_semantics" name="wording_and_semantics" value="true">
+                                <label for="wording_and_semantics">Wording and semantics（用字及文意）</label><br>
+                                <input type="checkbox" id="footage" name="footage" value="true">
+                                <label for="footage">Footage（素材）</label><br>
+                                <input type="checkbox" id="screen_time" name="screen_time" value="true">
+                                <label for="screen_time">Screen time（單一幕的時長）</label><br>
+                                <input type="checkbox" id="video_length" name="video_length" value="true">
+                                <label for="video_length">Video length（影片總長度）</label><br>
+                            </div>
+                        </div>
+                        <h4>Other feedback:</h4>
+                        <div class="form-row">
+                            <textarea name="other_feedback" rows="4"></textarea>
+                        </div>
+                        <div class="button-container">
+                            <button type="submit" class="approve" name="action" value="approve">Submit</button>
+                        </div>
+                        <div class="reviewer">Review by {{ request.user }}</div>
+                    </form>
+            </div>
+            <div
+        </div>
+        <script src="scripts.js"></script>
+    </body>
+</html>

@@ -1,0 +1,323 @@
+{
+  "Main": {
+    "canvasWidth": 1200,
+    "canvasHeight": 640
+  },
+  "BG": {
+    "Type": "Solid",
+    "firstColor": {
+      "r": 85,
+      "g": 67,
+      "b": 121
+    },
+    "secondColor": {
+      "r": 255,
+      "g": 80,
+      "b": 0
+    },
+    "thirdColor": {
+      "r": 150,
+      "g": 0,
+      "b": 255
+    },
+    "gradientPosition": 0.5
+  },
+  "Plane": {
+    "Width": 1200,
+    "Height": 800,
+    "xCell": 40,
+    "yCell": 10,
+    "xAxis": 0,
+    "yAxis": 0,
+    "zAxis": 24,
+    "xTilt": 0,
+    "yTilt": 0,
+    "zTilt": 5,
+    "xLocal": true,
+    "yLocal": true,
+    "zLocal": true
+  },
+  "Noise": {
+    "seedNum": 3829,
+    "Type": "Scape",
+    "Amplitude": 400,
+    "xFreq": 0.075,
+    "yFreq": 0.03,
+    "Detail": 50,
+    "detailScale": 5,
+    "Elevation": 0
+  },
+  "Ease": {
+    "Type": "None",
+    "rowMode": "Center",
+    "roundMode": "Center",
+    "Width": 1,
+    "Relief": 0.01
+  },
+  "Flow": {
+    "Force": 0,
+    "Angle": 90
+  },
+  "Fill": {
+    "Type": "Box (3D)",
+    "size3DType": "Three-axis",
+    "sizeXOBJ": 40,
+    "sizeYOBJ": 10,
+    "sizeZOBJ": 25,
+    "sizeOBJ": 20,
+    "noiseSizeMin": 5,
+    "noiseSizeMax": 20,
+    "randomOBJ": 0,
+    "multiplyOBJ": 1,
+    "colorType": "Heightmap",
+    "gradDirection": "Vertical",
+    "mapDirection": "Top/Bottom",
+    "firstColor": {
+      "r": 211,
+      "g": 255,
+      "b": 220
+    },
+    "secondColor": {
+      "r": 84,
+      "g": 64,
+      "b": 119
+    },
+    "colorNoise": 0,
+    "Contrast": 0.14
+  },
+  "Stroke": {
+    "Type": "None",
+    "colorType": "Solid",
+    "firstColor": {
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    "secondColor": {
+      "r": 255,
+      "g": 80,
+      "b": 0
+    },
+    "Weight": 2,
+    "Position": 0,
+    "Contrast": 0
+  },
+  "Camera": {
+    "Type": "Perspective",
+    "perspPreset": "Top",
+    "orthoPreset": "Front",
+    "FOV": 120,
+    "xValue": 0.5,
+    "yValue": 1.35,
+    "Zoom": -50,
+    "Scale": 1
+  },
+  "Motion": {
+    "bgOneCheck": false,
+    "bgOneType": "Blend Color",
+    "bgOneStart": {
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    "bgOneEnd": {
+      "r": 255,
+      "g": 255,
+      "b": 0
+    },
+    "bgOneFactor": 1,
+    "bgOnePoint": 0,
+    "bgTwoCheck": false,
+    "bgTwoType": "Blend Color",
+    "bgTwoStart": {
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    "bgTwoEnd": {
+      "r": 255,
+      "g": 0,
+      "b": 255
+    },
+    "bgTwoFactor": 1,
+    "bgTwoPoint": 0,
+    "bgThreeCheck": false,
+    "bgThreeType": "Blend Color",
+    "bgThreeStart": {
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    "bgThreeEnd": {
+      "r": 255,
+      "g": 0,
+      "b": 0
+    },
+    "bgThreeFactor": 1,
+    "bgThreePoint": 0,
+    "ampCheck": false,
+    "ampInterval": {
+      "min": 1,
+      "max": 500
+    },
+    "ampFactor": 1,
+    "ampPoint": 0,
+    "xfreqCheck": false,
+    "xfreqInterval": {
+      "min": 0,
+      "max": 0.1
+    },
+    "xfreqFactor": 1,
+    "xfreqPoint": 0,
+    "yfreqCheck": false,
+    "yfreqInterval": {
+      "min": 0,
+      "max": 0.1
+    },
+    "yfreqFactor": 1,
+    "yfreqPoint": 0,
+    "detailCheck": false,
+    "detailInterval": {
+      "min": 0,
+      "max": 100
+    },
+    "detailFactor": 1,
+    "detailPoint": 0,
+    "easeCheck": false,
+    "easeInterval": {
+      "min": 0,
+      "max": 5
+    },
+    "easeFactor": 1,
+    "easePoint": 0,
+    "flowCheck": false,
+    "flowType": "Seamless",
+    "flowStart": 0,
+    "flowAddition": 0.05,
+    "flowSeamless": 0.05,
+    "flowFactor": 1,
+    "flowPoint": 0,
+    "fOneCheck": true,
+    "fOneType": "Blend Color",
+    "fOneStart": {
+      "r": 240,
+      "g": 255,
+      "b": 210
+    },
+    "fOneEnd": {
+      "r": 214,
+      "g": 222,
+      "b": 255
+    },
+    "fOneFactor": 4,
+    "fOnePoint": 0,
+    "fTwoCheck": false,
+    "fTwoType": "Blend Color",
+    "fTwoStart": {
+      "r": 255,
+      "g": 80,
+      "b": 0
+    },
+    "fTwoEnd": {
+      "r": 255,
+      "g": 0,
+      "b": 80
+    },
+    "fTwoFactor": 1,
+    "fTwoPoint": 0,
+    "sOneCheck": false,
+    "sOneType": "Blend Color",
+    "sOneStart": {
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    "sOneEnd": {
+      "r": 255,
+      "g": 80,
+      "b": 0
+    },
+    "sOneFactor": 1,
+    "sOnePoint": 0,
+    "sTwoCheck": false,
+    "sTwoType": "Blend Color",
+    "sTwoStart": {
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    "sTwoEnd": {
+      "r": 150,
+      "g": 0,
+      "b": 255
+    },
+    "sTwoFactor": 1,
+    "sTwoPoint": 0,
+    "FOVCheck": false,
+    "FOVInterval": {
+      "min": 75,
+      "max": 100
+    },
+    "FOVFactor": 1,
+    "FOVPoint": 0,
+    "scaleCheck": false,
+    "scaleInterval": {
+      "min": 1,
+      "max": 3
+    },
+    "scaleFactor": 1,
+    "scalePoint": 0,
+    "xAxisCheck": false,
+    "xAxisInterval": {
+      "min": 0,
+      "max": 25
+    },
+    "xAxisFactor": 1,
+    "xAxisPoint": 0,
+    "yAxisCheck": false,
+    "yAxisInterval": {
+      "min": 0,
+      "max": 25
+    },
+    "yAxisFactor": 1,
+    "yAxisPoint": 0,
+    "zAxisCheck": false,
+    "zAxisInterval": {
+      "min": 0,
+      "max": 25
+    },
+    "zAxisFactor": 1,
+    "zAxisPoint": 0,
+    "xTiltCheck": false,
+    "xTiltType": "Swing",
+    "xTiltStart": 0,
+    "xTiltInterval": {
+      "min": 0,
+      "max": 25
+    },
+    "xTiltFactor": 1,
+    "xTiltPoint": 0,
+    "yTiltCheck": false,
+    "yTiltType": "Swing",
+    "yTiltStart": 0,
+    "yTiltInterval": {
+      "min": 0,
+      "max": 25
+    },
+    "yTiltFactor": 1,
+    "yTiltPoint": 0,
+    "zTiltCheck": true,
+    "zTiltType": "Swing",
+    "zTiltStart": 0,
+    "zTiltInterval": {
+      "min": -15,
+      "max": 15
+    },
+    "zTiltFactor": 1,
+    "zTiltPoint": 0
+  },
+  "Loop": {
+    "Speed": 1,
+    "Length": 30
+  }
+}
