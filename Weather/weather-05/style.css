@@ -1,0 +1,84 @@
+
+@font-face {
+  font-family: "MaxiRoundVar";
+  src: url("assets/fonts/ABCMaxiRoundVariable-Trial.ttf") format("truetype-variations");
+}
+
+
+@font-face {
+  font-family: "Camera";
+  src: url("assets/fonts/ABCCameraVariable-Trial.ttf") format("truetype-variations");
+}
+
+@font-face {
+  font-family: "Oracle";
+  src: url("assets/fonts/ABCOracleTripleVariable-Trial.ttf") format("truetype-variations");
+}
+
+* {
+  font-family: "MaxiRoundVar";
+  display:border-box;
+  margin:0;
+  padding:0;
+}
+
+html{
+  background: rgb(230, 230, 230);
+}
+canvas {
+  display: block;
+  position: absolute;
+}
+
+main {
+  margin: auto;
+  position: relative;
+  width:80vw;
+}
+
+canvas{
+  position:absolute;
+  top:10vh;
+  left:0;
+  z-index: -999;
+  border-radius: 5px;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
+}
+
+#weather{
+  top: 10vh;
+  left:0;
+  width: 840px;
+  height: 500px;
+  position: absolute;
+}
+
+.title{
+  display:none;
+  text-align: left;
+  position:absolute;
+  color: white;
+  font-family: "MaxiRoundVar";
+  bottom: 90px;
+  left: 120px;
+  text-align: center;
+  font-feature-settings: "ss03";
+  font-variation-settings: "wdth" 215;
+  font-stretch: 130%;
+}
+
+.title h2 {
+  text-align: left;
+  font-weight: 400;
+  font-size: 2rem;
+  font-stretch: 130%;
+
+}
+
+.title p {
+  font-family:"Camera";
+  text-align: left;
+  font-weight: 300;
+  font-size: 1rem;
+  
+}
