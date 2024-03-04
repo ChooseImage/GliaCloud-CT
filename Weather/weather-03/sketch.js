@@ -1,6 +1,14 @@
 // require https://cdn.jsdelivr.net/npm/tweakpane@3.0.7/dist/tweakpane.min.js
 // require https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.min.js
-
+const warmIrridescence = [
+  "#82127e",
+  "#1e396c",
+  "#d51d67",
+  "#ed8e07",
+  "#d73a2a",
+  "#291a2c",
+];
+const warmAndFelty = ["#1587b3", "#51cee7", "#f889b9", "#ee390c", "#2c0505"];
 const pane = new Tweakpane.Pane();
 let img;
 let buildingX, buildingY, buildingW, buildingD, Building;
@@ -15,7 +23,7 @@ let w = 800;
 let h = 800;
 let woff = w * 0.1;
 let hoff = h * 0.06;
-let off = 0.3;
+let off = 0.24;
 
 // front building
 let x1 = 400;
@@ -46,7 +54,7 @@ const PARAMS = {
   Grain: 152,
   backGroundColor: "#7878cf",
   squareColor: "#485b58",
-  BuildingColor: "#ff957a",
+  BuildingColor: "#1e396c",
   BridgeColor: "#939a81",
   WindowColor: "#698ae3",
   Shadow: 80,
@@ -103,16 +111,17 @@ function setup() {
   createCanvas(w, h);
 
   buildingX = map(random(), 0, 1, 100, 600);
-  buildingY = map(random(), 0, 1, 300, 550);
-  buildingW = map(random(), 0, 1, 100, 350);
-  buildingD = map(random(), 0, 1, 100, 350);
+  buildingY = map(random(), 0, 1, 150, 550);
+  buildingW = map(random(), 0, 1, 130, 200);
+  buildingD = buildingW * random(0.8, 1.2);
   Building = {
     x: buildingX,
     y: buildingY,
     w: buildingW,
     d: buildingD,
+    windowType: "test",
     windowW: 40,
-    windowH: 30,
+    windowH: 126,
   };
 
   color.addInput(PARAMS, "Grain", {
@@ -269,6 +278,14 @@ function draw() {
   background(PARAMS.backGroundColor);
   //drawUnit(buildingX, buildingY, buildingW, buildingD);
   drawUnit(Building);
+  // Building = {
+  //   x: buildingX,
+  //   y: buildingY,
+  //   w: buildingW,
+  //   d: buildingD,
+  //   windowW: 40,
+  //   windowH: 30,
+  // };
   drawWindows(Building);
   //drawStuff();
   blendMode(SOFT_LIGHT);
@@ -508,42 +525,138 @@ function makeWindow(x, y, numCols, numRows, winSize, margin, firstCol, offY) {
 }
 
 function drawWindows(building) {
-  const margin = building.windowW * 0.1;
-  const firstCol = margin;
+  let margin = building.windowW * 0.2;
   let winEdgeX = margin;
   let winEdgeY = margin;
 
-  push();
+  const left = building.windowType === "both" || building.windowType === "left";
+  const right =
+    building.windowType === "both" || building.windowType === "right";
+  const test = building.windowType === "test";
+
   fill(PARAMS.WindowColor);
   noStroke();
-  //stroke(200);
-  const numCols = building.w / building.windowW;
-  for (let col = firstCol; col < numCols - 1; col++) {
-    for (let row = 0; row < 40; row++) {
-      let u1, o1, u2, o2, o3, o4;
+  stroke(200);
+  const numColsR = building.w / building.windowW;
+  const numColsL = building.d / building.windowW;
+  const windowRwidth = building.windowW;
+  const windowLwidth = (building.windowW * building.d) / building.w;
 
-      u1 = building.x + winEdgeX + building.windowW * col;
-      o1 =
-        building.y +
-        winEdgeY +
-        building.windowW * row +
-        building.windowW * col * off;
-      u2 = u1 + building.windowW;
-      o2 = o1 + building.windowW;
-      o4 = o1 + building.windowW * off;
-      o3 = o4 + building.windowW;
+  // test
+  // beginShape();
+  // vertex(u1, o1);
+  // vertex(u1, o2 - margin);
+  // vertex(u2 - margin, o3 - margin);
+  // vertex(u2 - margin, o4);
+  // endShape();
 
-      beginShape();
-      vertex(u1, o1);
-      vertex(u1, o2 - margin);
-      vertex(u2 - margin, o3 - margin);
-      vertex(u2 - margin, o4);
-      endShape();
+  // HERE FUCKO
+  // u1 = x+winEdgeX+winSize*col;
+  // u2 = u1+winSize;
+
+  // o1 = y+winEdgeY+winSize*row+winSize*col*off;
+  // o2 = o1+winSize;
+  // o4 = o1+winSize*off;
+  // o3 = o4+winSize;
+
+  // beginShape();
+  // vertex(u1,o1);
+  // vertex(u1,o2-margin);
+  // vertex(u2-margin,o3-margin);
+  // vertex(u2-margin,o4);
+  // endShape();
+  const testA = 50;
+  const testW = 50;
+  const testH = 100;
+  margin = 10;
+  if (test) {
+    push();
+    for (let col = 0; col < 2; col++) {
+      for (let row = 0; row < 2; row++) {
+        //let u1, o1, u2, o2, o3, o4;
+        const u1 = building.x + winEdgeX + testA * col;
+        const u2 = u1 + testA;
+
+        const o1 = building.y + winEdgeY + testA * row + testA * col * off;
+        const o2 = o1 + testA;
+        const o4 = o1 + testA * off;
+        const o3 = o4 + testA;
+
+        beginShape();
+        vertex(u1, o1);
+        vertex(u1, o2 - margin);
+        vertex(u2 - margin, o3 - margin);
+        vertex(u2, o4);
+        endShape();
+      }
     }
+    pop();
   }
-  pop();
+
+  // RIGHT FACING SIDE
+  if (right) {
+    push();
+    for (let col = 0; col < numColsR - 1; col++) {
+      for (let row = 0; row < 40; row++) {
+        let u1, o1, u2, o2, o3, o4;
+        u1 = building.x + winEdgeX + windowRwidth * col;
+        o1 =
+          building.y + winEdgeY + windowRwidth * row + windowRwidth * col * off;
+        u2 = u1 + windowRwidth;
+        o2 = o1 + building.windowH;
+        o4 = o1 + windowRwidth * off;
+        o3 = o4 + building.windowH;
+        beginShape();
+        vertex(u1, o1);
+        vertex(u1, o2);
+        vertex(u2 - margin * off, o3);
+        vertex(u2 - margin * off, o4);
+        endShape();
+      }
+    }
+    pop();
+  }
+
+  // LEFT FACING SIDE
+  if (left) {
+    push();
+    for (let col = 0; col < numColsL - 1; col++) {
+      for (let row = 0; row < 40; row++) {
+        let u1, o1, u2, o2, o3, o4;
+
+        u1 = building.x - winEdgeX - windowLwidth * col;
+        o1 =
+          building.y + winEdgeY + windowLwidth * row + windowLwidth * col * off;
+        u2 = u1 - windowLwidth;
+        o2 = o1 + building.windowH;
+        o4 = o1 + windowLwidth * off;
+        o3 = o4 + building.windowH;
+
+        beginShape();
+        vertex(u1, o1);
+        vertex(u1, o2);
+        vertex(u2 + margin * off, o3);
+        vertex(u2 + margin * off, o4);
+        endShape();
+      }
+    }
+    pop();
+  }
 }
 
 // function mouseReleased() {
 //   save('Brut_gen' + hour() + minute() + second() + '.jpg')
 // }
+
+/*
+        const x1 = winW * col + windowMargin;
+        const x2 = x1 + winW - windowMargin;
+              
+        const yOffset = isRight ? lerp( 0, shift, x1/wallWidth ) : lerp( shift, 0, x1/wallWidth );
+        const yOffset2 = isRight ? lerp( 0, shift, x2/wallWidth ) : lerp( shift, 0, x2/wallWidth );
+    
+        const y1 = -buildingH + yOffset + winH * row + windowMargin;
+        const y2 = y1 + winH - windowMargin;
+        const y4 = -buildingH + yOffset2 + winH * row + windowMargin;
+        const y3 = y4 + winH - windowMargin;
+*/
