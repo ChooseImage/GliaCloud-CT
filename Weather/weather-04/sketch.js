@@ -1,96 +1,91 @@
-//for weekly Creative Coding Challenge-- https://openprocessing.org/curation/78544 on theme of "Single Hue"
-//Don't have a lot of commentary on the artistic process this time so
-//decided to add lots of comments in the code to try to make it more legible.
-
-//colors array is array of hues and saturations- 'theColor' variable below chooses from array,
-//weighted towards the blues of my favorite coffee mug
-colors = [
-  [198, 64],
-  [198, 64],
-  [198, 64],
-  [193, 100],
-  [193, 100],
-  [193, 100],
-  [88, 19],
-  [33, 93],
-  [355, 32],
-];
-let theColor;
-let texture;
+let url = "https://coolors.co/fe9920-1e91d6-d87cac-f9b9c3-341b74";
+let pallete;
+let graphics;
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
-  pixelDensity(1);
-  theColor = random(colors);
-  colorMode(HSB);
-  noStroke();
+  createCanvas(800, 600);
+  colorMode(HSB, 360, 100, 100, 100);
+  angleMode(DEGREES);
+  print("url: ", url);
 
-  //texture-- noise with a bit randomness thrown in, pixel array of buffer,
-  //which is rendered once in setup and drawn over canvas every frame at the end of draw
-  texture = createGraphics(windowWidth, windowHeight);
-  texture.pixelDensity(1);
-  texture.loadPixels();
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y += floor(random(0, 3))) {
-      var index = (x + y * width) * 4;
-      let avalue = map(noise(x / 100, y / 100), -1, 1, 0, 60);
-      texture.pixels[index + 0] = 0;
-      texture.pixels[index + 1] = 0;
-      texture.pixels[index + 2] = 0;
-      texture.pixels[index + 3] = avalue;
-    }
+  graphics = createGraphics(width, height);
+  graphics.colorMode(HSB, 360, 100, 100, 100);
+  for (let i = 0; i < (width * height * 10) / 100; i++) {
+    let x = random(width);
+    let y = random(height);
+    let w = random(3);
+    let h = random(3);
+    graphics.fill(0, 0, 100, 1);
+    graphics.noStroke();
+    graphics.ellipse(x, y, w, h);
   }
-  texture.updatePixels();
 }
 
 function draw() {
-  background(theColor[0], theColor[1], 10);
+  frameRate(0);
+  background(0, 0, 90);
+  pallete = createPallete(url);
+  console.log("pallet:", pallete);
 
-  //thetaOff variable adds an offset so that the different shapes (drawn w 'blib' function  below)
-  //are offset from each other in a pleasing way
-  thetaOff = 0;
-  for (let y = -100; y < height + 100; y += 75) {
-    thetaOff += 1;
-    for (let x = -150; x < width + 150; x += 350) {
-      thetaOff -= 3;
-      blib(x, y, thetaOff);
+  let offset = 20;
+  let margin = 0;
+
+  let cellsX = int(random(4, 12));
+  let cellsY = int(cellsX * 0.75);
+  cellsX = 4;
+  cellsY = 3;
+  let d = (width - offset * 2 - margin * (cellsX - 1)) / cellsX;
+
+  for (let j = 0; j < cellsY; j++) {
+    for (let i = 0; i < cellsX; i++) {
+      let x = offset + i * (d + margin) + d / 2;
+      let y = offset + j * (d + margin) + d / 2;
+      push();
+      translate(x, y);
+      rotate((int(random(4)) * 360) / 4);
+      drawGradientArc(-d / 2, -d / 2, d * 2, 0, 90, pallete.concat());
+      pop();
     }
   }
-  //drawing the pre-rendered texture
-  image(texture, 0, 0);
+  image(graphics, 0, 0);
 }
 
-//'blib' function takes an x/y position, and a 'theta' which allows
-//the shapes to be in a different place in the sine wave that defines the size of the ellipses
-//note: no shapes are actually moving, they are merely changing size
-function blib(x, y, theta) {
+function drawGradientArc(_x, _y, _d, angleA, angleB, colors) {
+  console.log(colors);
   push();
-  translate(x, y);
-  for (let i = 0; i < TAU; i += TAU / 22) {
-    //yer moves the shapes up as we iterate through the sine wave
-    let yer = map(i, 0, TAU, 0, -200);
-    //bright changes the brightness of HSB color as we iterate
-    bright = map(i, 0, TAU, 10, 100);
+  translate(_x, _y);
+  let angleMin = min(angleA, angleA);
+  let angleMax = max(angleA, angleB);
+  let cNum = int(random(colors.length));
+  let c = colors[cNum];
+  colors.splice(cNum, 1);
 
-    //setting the saturation of the HSB color, desaturating towards the top, so that we get closer to white
-    if (bright > 60) {
-      sat = map(bright, 60, 100, theColor[1], 0);
-    } else {
-      sat = theColor[1];
-    }
+  let cANum = int(random(colors.length));
+  let cA = colors[cANum];
+  colors.splice(cANum, 1);
 
-    //'size' sets the size of the ellipses according to it's place in the sine wave
-    // as defined by it's thetaOffset, plus iteration plus slowed down frameCount
-    //Also, sizeScaler scales the changes up and down, you can uncomment line 80 to see what sizeScaler does
-    let size = map(sin(theta + i - frameCount / 30), -1, 1, 10, 200);
-    let sizeScaler = map(i, 0, TAU, 2, 0.1);
-    //	sizeScaler=1
-    //fill is Hue- defined by 'theColor' variable, Saturation by the adjusted saturation
-    //in sat variable and brightness from dark to light by iteration
-    fill(theColor[0], sat, bright);
-
-    //ellipse sized by the above variables
-    ellipse(0, yer, size * sizeScaler, (size / 2) * sizeScaler);
+  let cBNum = int(random(colors.length));
+  let cB = colors[cBNum];
+  colors.splice(cBNum, 1);
+  for (let angle = angleMin; angle <= angleMax; angle += 0.3) {
+    let x = (cos(angle) * _d) / 2;
+    let y = (sin(angle) * _d) / 2;
+    colorMode(RGB);
+    let cc = lerpColor(color(cA), color(cB), angle / abs(angleMax - angleMin));
+    stroke(cc);
+    strokeWeight(2);
+    line(x, y, 0, 0);
   }
   pop();
+}
+
+function createPallete(_url) {
+  let slash_index = _url.lastIndexOf("/");
+  let pallate_str = _url.slice(slash_index + 1);
+  let arr = pallate_str.split("-");
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = "#" + arr[i];
+  }
+  console.log(arr);
+  return arr;
 }
