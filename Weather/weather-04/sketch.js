@@ -1,19 +1,38 @@
 let url = "https://coolors.co/fe9920-1e91d6-d87cac-f9b9c3-341b74";
+const pane = new Tweakpane.Pane();
 let pallete;
 let graphics;
-let angles;
+let angles, visibility;
 let xNum = 3;
 let yNum = 1;
+[xNum, yNum] = [10, 7];
+let forecast = [21, 25, 0.7]; // time, temp, humidity;
+let forecastColors;
+const warmIrridescence = [
+  "#82127e",
+  "#1e396c",
+  "#d51d67",
+  "#ed8e07",
+  "#d73a2a",
+  "#291a2c",
+];
+
+const tempColor = ["#C62B01", "#3DD6D0"]; // hot, cold
+const sunlighColor = ["#FFFB84", "#1B0034"]; // sunny, cloudy
+const humidityColor = ["#DCA100", "#1000C6"]; // dry, humid
+
+const PARAMS = {
+  Time: 0,
+};
 
 function setup() {
   createCanvas(800, 600);
-  colorMode(HSB, 360, 100, 100, 100);
+  colorMode(HSB);
   angleMode(DEGREES);
-  print("url: ", url);
-  angles = generate2DArray(xNum, yNum);
+  angles = generate2DArray(xNum, yNum, [0, 90, 180, 270], "selection");
+  visibility = generate2DArray(xNum, yNum, [true, false], "noise");
 
   graphics = createGraphics(width, height);
-  graphics.colorMode(HSB, 360, 100, 100, 100);
   for (let i = 0; i < (width * height * 10) / 100; i++) {
     let x = random(width);
     let y = random(height);
@@ -23,11 +42,19 @@ function setup() {
     graphics.noStroke();
     graphics.ellipse(x, y, w, h);
   }
+
+  // Pane
+  pane.addInput(PARAMS, "Time", {
+    min: 0,
+    max: 23,
+  });
 }
 
 function draw() {
-  frameRate(0);
+  frameRate(24);
   background(0, 0, 90);
+  forecast = [PARAMS.Time, 25, 0.7]; // time, temp, humidity
+  forecastColors = setColors(forecast);
   pallete = createPallete(url);
 
   let offset = 20;
@@ -43,10 +70,11 @@ function draw() {
     for (let i = 0; i < cellsX; i++) {
       let x = offset + i * (d + margin) + d / 2;
       let y = offset + j * (d + margin) + d / 2;
+      if (visibility[j][i] === false) continue;
       push();
       translate(x, y);
       rotate(angles[j][i]);
-      drawGradientArc(-d / 2, -d / 2, d * 2, 0, 90, pallete.concat(), i, j);
+      drawGradientArc(-d / 2, -d / 2, d * 2, 0, 90, forecastColors, i, j);
       pop();
     }
   }
@@ -54,40 +82,45 @@ function draw() {
 }
 
 function drawGradientArc(_x, _y, _d, angleA, angleB, colors, i, j) {
-  console.log(colors);
   push();
   translate(_x, _y);
   let angleMin = min(angleA, angleA);
   let angleMax = max(angleA, angleB);
-  let cNum = int(random(colors.length));
-  let c = colors[cNum];
-  colorMode(RGB);
-  colors.splice(cNum, 1);
 
-  let cANum = int(noise(colors.length));
-  console.log("cANum:", cANum);
-  let Red = noise(millis()) * 0.002 * 255;
-  let cA = (Red, 40, 30);
-  console.log("cA:", cA);
-  colors.splice(cANum, 1);
-
-  let cBNum = int(random(colors.length));
-  let cB = colors[cBNum];
-  colors.splice(cBNum, 1);
   for (let angle = angleMin; angle <= angleMax; angle += 0.3) {
     let x = (cos(angle) * _d) / 2;
     let y = (sin(angle) * _d) / 2;
     colorMode(HSB);
     let cc = lerpColor(
-      color(120 + noise(millis() * 0.0001) * 360, 30, 80),
-      color(-60 + noise(i, millis() * 0.0001) * 360, 90, 30),
+      color(colors[0]),
+      color(colors[1]),
       angle / abs(angleMax - angleMin)
     );
+    cc = colors[0];
     stroke(cc);
     strokeWeight(2);
     line(x, y, 0, 0);
   }
   pop();
+}
+
+function setColors(colors) {
+  const TempColor = lerpColor(
+    color(tempColor[1]),
+    color(tempColor[0]),
+    map(colors[1], 5, 38, 0, 1)
+  );
+  const SunlighColor = lerpColor(
+    color(sunlighColor[1]),
+    color(sunlighColor[0]),
+    map(abs((colors[0] - 14) % 24), 0, 23, 1, 0)
+  );
+  const HumidityColor = lerpColor(
+    color(humidityColor[0]),
+    color(humidityColor[1]),
+    map(colors[2], 0, 1, 0, 1)
+  );
+  return [TempColor, SunlighColor, HumidityColor];
 }
 
 function createPallete(_url) {
@@ -97,23 +130,32 @@ function createPallete(_url) {
   for (let i = 0; i < arr.length; i++) {
     arr[i] = "#" + arr[i];
   }
-  console.log(arr);
   return arr;
 }
 
-function generate2DArray(x, y) {
-  const possibleValues = [0, 90, 180, 270]; // Possible values for the array elements
+function generate2DArray(x, y, possibleValues, type) {
   const outerArray = [];
   const numRows = y; // Number of sub-arrays
   const numCols = x; // Number of items in each sub-array
 
-  for (let i = 0; i < numRows; i++) {
-    const innerArray = [];
-    for (let j = 0; j < numCols; j++) {
-      const randomIndex = Math.floor(Math.random() * possibleValues.length); // Get a random index
-      innerArray.push(possibleValues[randomIndex]); // Add the value at the random index to the sub-array
+  if (type === "selection") {
+    for (let i = 0; i < numRows; i++) {
+      const innerArray = [];
+      for (let j = 0; j < numCols; j++) {
+        const randomIndex = Math.floor(Math.random() * possibleValues.length); // Get a random index
+        innerArray.push(possibleValues[randomIndex]); // Add the value at the random index to the sub-array
+      }
+      outerArray.push(innerArray); // Add the sub-array to the outer array
     }
-    outerArray.push(innerArray); // Add the sub-array to the outer array
+  } else if (type === "noise") {
+    for (let i = 0; i < numRows; i++) {
+      const innerArray = [];
+      for (let j = 0; j < numCols; j++) {
+        const visibility = noise(i, j) > 0.4;
+        innerArray.push(visibility ? true : false);
+      }
+      outerArray.push(innerArray);
+    }
   }
 
   return outerArray;
