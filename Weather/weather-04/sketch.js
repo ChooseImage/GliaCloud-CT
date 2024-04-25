@@ -175,7 +175,7 @@ function generate2DArray(x, y, possibleValues, type) {
     for (let i = 0; i < numRows; i++) {
       const innerArray = [];
       for (let j = 0; j < numCols; j++) {
-        const visibility = noise(i, j) > 0.3;
+        const visibility = noise(i, j) > 0.5;
         innerArray.push(visibility ? true : false);
       }
       outerArray.push(innerArray);
