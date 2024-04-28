@@ -1,4 +1,17 @@
+const pane = new Tweakpane.Pane();
+const PARAMS = {
+  Time: 0,
+};
 var cloud;
+let forecast = [21, 25, 0.7]; // time, temp, humidity;
+const sunlighColor = ["#1B0034", "e0c31d"]; // sunny, cloudy
+const tempColor = ["#C62B01", "#3DD6D0"]; // hot, cold
+const temp = [
+  28.91, 36.65, 17.93, 22.96, 21.09, 18.84, 32.0, 26.67, 24.44, 23.13, 29.29,
+  33.18, 33.11, 33.03, 30.57, 19.61, 20.32, 23.79, 36.67, 29.4, 22.08, 17.65,
+  25.81, 35.12,
+];
+const weatherData = [];
 
 function setup() {
   createCanvas(800, 800);
