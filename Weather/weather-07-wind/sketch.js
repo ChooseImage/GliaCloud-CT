@@ -52,7 +52,7 @@ function draw() {
           PARAMS.Length,
           windDirs[PARAMS.Time] +
             noise(i * 0.05, j * 0.4) +
-            noise(millis() * 0.0001) * 40,
+            noise(millis() * 0.001) * 40,
           color(255, 40 * noise(i * 0.5, j * 0.4, millis() * 0.0005))
         );
     }

@@ -2,6 +2,7 @@ const pane = new Tweakpane.Pane();
 const PARAMS = {
   Time: 0,
   TempColor: "#C62B01",
+  bgColor: { r: 0, g: 255, b: 214, a: 0.5 },
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -21,7 +22,7 @@ const weatherData = [];
 let ys = [];
 let amount = 30;
 let noiseGra;
-const [_Width, _Height] = [320, 540];
+const [_Width, _Height] = [800, 540];
 let fontMono, fontSerif;
 let date = new Date();
 let formattedTime =
@@ -44,6 +45,9 @@ function setup() {
     min: 0,
     max: 23,
     step: 1,
+  });
+  pane.addInput(PARAMS, "bgColor", {
+    view: "color",
   });
   pane.addInput(PARAMS, "TempColor", {
     view: "color",
@@ -75,8 +79,7 @@ function setup() {
 function draw() {
   clear();
   image(noiseGra, 0, 0);
-  const bgClr = color("#ffd500");
-  bgClr.setAlpha(10);
+  const bgClr = color("#000");
   background(bgClr);
   fill(PARAMS.TempColor);
 
@@ -96,7 +99,7 @@ function draw() {
   // Mask setting
   //Mask
   beginClip();
-  circle(width / 2, height / 2 - 70, width / 1.5);
+  circle(width / 2, height / 2 - 70, width / 4);
   endClip();
   for (let i = 0; i < ys.length; i++) {
     const weight = map(ys[i], 0, height, height / amount, 1);
