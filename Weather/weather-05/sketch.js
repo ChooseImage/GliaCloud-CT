@@ -1,8 +1,36 @@
+const apiUrl =
+  "https://data3p-al23s7k26q-de.a.run.app/weather/current?area=taipei";
+
+let currentWeather;
+let fadeLength = 100;
+let f = 0;
+
+function requestJsonData() {
+  fetch(apiUrl)
+    .then((response) => response.json())
+    .then((data) => {
+      loadData(data);
+    });
+}
+
+function loadData(data) {
+  // overwrite the quote string
+  currentWeather = data;
+  print(data);
+}
+
+let mappedTemps, mappedPerceps, mappedWind, mappedHumidity;
+
 const pane = new Tweakpane.Pane();
 const PARAMS = {
   Time: 0,
   TempColor: "#C62B01",
-  bgColor: { r: 0, g: 255, b: 214, a: 0.5 },
+  bgColor: "#bfbfef",
+  lineColor: { r: 0, g: 255, b: 214, a: 0.5 },
+  lineBrightness: 100,
+  tempColorAngle: 30,
+  percepsColorAngle: 50,
+  dotSize: 14,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -13,11 +41,20 @@ const temp = [
   33.18, 33.11, 33.03, 30.57, 19.61, 20.32, 23.79, 36.67, 29.4, 22.08, 17.65,
   25.81, 35.12,
 ];
+
 const humidityColor = ["#DCA100", "#1000C6"]; // dry, humid
 const humidity = [
   0.59, 0.87, 0.02, 0.18, 0.65, 0.72, 0.91, 0.99, 0.86, 0.03, 0.44, 0.81, 0.19,
   0.39, 0.72, 0.42, 0.24, 0.13, 0.56, 0.73, 0.64, 0.18, 0.6, 0.46,
 ];
+
+const perceps = [
+  0.15, 0.14, 0.12, 0.29, 0.14, 0.12, 0.17, 0.18, 0.26, 0.15, 0.51, 0.78, 1.0,
+  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.58, 0.34, 0.16, 0.13, 0.15, 0.27, 0.14, 0.28,
+  0.1, 0.17, 0.2, 0.26, 0.27, 0.21, 0.18, 0.43, 0.74, 1.0, 1.0, 1.0, 1.0, 1.0,
+  1.0, 1.0, 0.21, 0.14, 0.25, 0.11, 0.28,
+];
+
 const weatherData = [];
 let ys = [];
 let amount = 30;
@@ -38,8 +75,12 @@ function preload() {
 
 function setup() {
   textFont(fontSerif);
-
   blendMode(SCREEN);
+  requestJsonData();
+  mappedTemps = mapData(temp, 40);
+  mappedPerceps = mapData(perceps, 40);
+  // data prep
+
   // Pane
   pane.addInput(PARAMS, "Time", {
     min: 0,
@@ -51,6 +92,25 @@ function setup() {
   });
   pane.addInput(PARAMS, "TempColor", {
     view: "color",
+  });
+  pane.addInput(PARAMS, "lineColor", {
+    view: "color",
+  });
+  pane.addInput(PARAMS, "lineBrightness", {
+    min: 0,
+    max: 100,
+  });
+  pane.addInput(PARAMS, "tempColorAngle", {
+    min: 0,
+    max: 360,
+  });
+  pane.addInput(PARAMS, "percepsColorAngle", {
+    min: 0,
+    max: 360,
+  });
+  pane.addInput(PARAMS, "dotSize", {
+    min: 0,
+    max: 40,
   });
   createCanvas(_Width, _Height);
   const bgClr = color("#ffd500");
@@ -78,47 +138,68 @@ function setup() {
 
 function draw() {
   clear();
-  image(noiseGra, 0, 0);
+
+  //image(noiseGra, 0, 0);
   const bgClr = color("#000");
-  background(bgClr);
+  background(20, 255);
+
+  // CLOUD MASKING
+  push();
+  noStroke();
+  clip(cloudMask);
+  fill(255);
+  for (let i = 0; i < 60; i++) {
+    for (let j = 0; j < 40; j++) {
+      fill(100 + 155 * abs(noise(i * 4, j * 10, millis() * 0.0001)));
+      circle(
+        i * 20,
+        j * 20,
+        PARAMS.dotSize * noise(i * 4, j * 0.3, millis() * 0.001)
+      );
+      /*
+      rectMode(CENTER);
+      rect(
+        i * 20,
+        j * 20,
+        PARAMS.dotSize * noise(i * 4, j * 0.3, millis() * 0.001)
+      );
+      */
+    }
+  }
+  pop();
   fill(PARAMS.TempColor);
+
+  // --------------------------------------------
 
   forecast = [PARAMS.Time, temp[PARAMS.Time], humidity[PARAMS.Time]]; // time, temp, humidity
   forecastColors = setColors(forecast);
 
   let condition = "Sunny";
   let temperture = forecast[1].toString().slice(0, 2);
-  let wCon = textWidth(condition);
   let wTemp = textWidth(temperture);
   textSize(50);
-  text(temperture, width / 2 - wTemp / 2, height / 1.4);
-  text(condition, width / 2 - wCon / 2, height / 1.2);
-
-  push();
-
-  // Mask setting
-  //Mask
-  beginClip();
-  circle(width / 2, height / 2 - 70, width / 4);
-  endClip();
-  for (let i = 0; i < ys.length; i++) {
-    const weight = map(ys[i], 0, height, height / amount, 1);
-    const alpha = map(ys[i], 0, height, 255, 200);
-    const clr1 = forecastColors[1];
-    const clr2 = forecastColors[0];
-    const ratio = map(ys[i], 0, height, 0, 1);
-    const mixedClr = lerpColor(clr1, clr2, ratio);
-    const strokeClr = color(mixedClr);
-    strokeClr.setAlpha(alpha);
-    strokeWeight(weight);
-    stroke(strokeClr);
-    line(0, ys[i], width, ys[i]);
-    if (ys[i] > height) {
-      ys[i] = 0;
-    }
-    ys[i] += 0.3; // Speed
+  if (currentWeather) {
+    temperture = round(
+      getAverage([
+        currentWeather.high_temperature,
+        currentWeather.low_temperature,
+      ]),
+      1
+    );
   }
-  pop();
+
+  //text(temperture, width / 2 - wTemp / 2, height / 1.4);
+
+  //text(condition, width / 2 - wCon / 2, height / 1.2);
+
+  createLine(mappedTemps, PARAMS.tempColorAngle, -140, 10);
+  createLine(
+    mappedPerceps,
+    PARAMS.percepsColorAngle,
+    -70,
+    10 + height / 24 / 2
+  );
+
   // 	noStroke()
   // 	fill('#ffd500')
 
@@ -147,6 +228,59 @@ function draw() {
   // y += 1
 }
 
+function drawSun() {
+  push();
+
+  // Mask setting
+  //Mask
+  beginClip();
+  circle(width / 2, height / 2 - 70, width / 4);
+  endClip();
+  for (let i = 0; i < ys.length; i++) {
+    const weight = map(ys[i], 0, height, height / amount, 1);
+    const alpha = map(ys[i], 0, height, 255, 200);
+    const clr1 = forecastColors[1];
+    const clr2 = forecastColors[0];
+    const ratio = map(ys[i], 0, height, 0, 1);
+    const mixedClr = lerpColor(clr1, clr2, ratio);
+    const strokeClr = color(mixedClr);
+    strokeClr.setAlpha(alpha);
+    strokeWeight(weight);
+    stroke(strokeClr);
+    line(0, ys[i], width, ys[i]);
+    if (ys[i] > height) {
+      ys[i] = 0;
+    }
+    ys[i] += 0.3; // Speed
+  }
+  pop();
+}
+
+function cloudMask() {
+  beginShape();
+  vertex(62.5001, 81.4998);
+  vertex(30.0001, 81.4998);
+  bezierVertex(13.7501, 81.4998, 7.0001, 102.5, 2.0001, 125.5);
+  bezierVertex(-1.9999, 143.9, 14.6668, 165.167, 23.5001, 173.5);
+  vertex(348.5, 173.5);
+  bezierVertex(394.5, 148, 384.5, 107.5, 365, 87.5);
+  bezierVertex(349.4, 71.5, 322.5, 74.8333, 311, 78.5);
+  bezierVertex(307, 41.5, 285.5, 40, 276.5, 38.5);
+  bezierVertex(269.3, 37.3, 254.5, 40.6667, 248, 42.5);
+  bezierVertex(242.5, 30.4999, 227.4, 5.6998, 211, 2.4998);
+  bezierVertex(194.6, -0.700204, 177.167, 1.16646, 170.5, 2.4998);
+  bezierVertex(167, 3.33313, 159.5, 5.4998, 157.5, 7.4998);
+  bezierVertex(155.5, 9.4998, 151, 10.3331, 149, 10.4998);
+  vertex(131.5, 10.4998);
+  bezierVertex(128.7, 10.4998, 125.333, 13.4998, 124, 14.9998);
+  bezierVertex(121.5, 17.9998, 116.1, 24.3998, 114.5, 25.9998);
+  bezierVertex(112.9, 27.5998, 112.5, 28.9998, 112.5, 29.4998);
+  vertex(112.5, 45.9998);
+  bezierVertex(104.5, 45.9998, 87.7001, 46.2998, 84.5001, 47.4998);
+  bezierVertex(81.3001, 48.6998, 68.5001, 70.6665, 62.5001, 81.4998);
+  endShape();
+}
+
 function setColors(colors) {
   const TempColor = lerpColor(
     color(tempColor[1]),
@@ -170,6 +304,29 @@ function setColors(colors) {
     color(sunlighColor[0]),
     color(sunlighColor[1]),
   ];
+}
+
+function createLine(data, colorIndex, offX = 0, offY = 0) {
+  push();
+  colorMode(HSL, 100);
+  translate(offX, offY);
+  for (let y = 0; y < 24; y++) {
+    const fillColor = color(colorIndex, data[y] * 2, PARAMS.lineBrightness);
+    //fill(colorIndex, data[y] * 2, 70);
+    noStroke();
+    for (let i = 0; i < fadeLength; i++) {
+      const focus = 100 - map(pow(Math.abs(y - 24 / 2), 1.3), 0, 24 / 2, 0, 60);
+      const fade = 100 - map(i, 0, fadeLength, 0, 300);
+      fillColor.setAlpha(getWeightedAverage([focus, fade], [0.7, 0.3]));
+      fill(fillColor);
+      circle(
+        width - data[y] + i * 3,
+        y * (height / 24),
+        3 + 2 * noise(f * y * 0.0003, f * data[y] * 0.0001, f * i * 0.0001)
+      );
+    }
+  }
+  pop();
 }
 
 /*
@@ -296,3 +453,20 @@ void draw() {
   //if (frameCount%2==0 && frameCount<121) saveFrame("image-###.jpg");
 }
 */
+
+// -------------------- UTILS -------------------------------
+const getAverage = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+const getWeightedAverage = (arr, weights) =>
+  arr.reduce((a, b, i) => a + b * weights[i], 0) / arr.length;
+const round = (num, places) => {
+  Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
+};
+function mapData(data, max) {
+  // return a new array with the temps mapped to the canvasheight
+  let maxData = Math.max(...data);
+  let minData = Math.min(...data);
+  let mappedData = data.map((dataI) => {
+    return map(dataI, minData, maxData, 0, max);
+  });
+  return mappedData;
+}
