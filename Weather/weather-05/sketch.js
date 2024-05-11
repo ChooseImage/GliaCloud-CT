@@ -31,6 +31,8 @@ const PARAMS = {
   tempColorAngle: 30,
   percepsColorAngle: 50,
   dotSize: 14,
+  cloudDotX: 1,
+  cloudDotY: 1,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -112,6 +114,14 @@ function setup() {
     min: 0,
     max: 40,
   });
+  pane.addInput(PARAMS, "cloudDotX", {
+    min: 0,
+    max: 10,
+  });
+  pane.addInput(PARAMS, "cloudDotY", {
+    min: 0,
+    max: 10,
+  });
   createCanvas(_Width, _Height);
   const bgClr = color("#ffd500");
   bgClr.setAlpha(50);
@@ -152,8 +162,8 @@ function draw() {
     for (let j = 0; j < 40; j++) {
       fill(100 + 155 * abs(noise(i * 4, j * 10, millis() * 0.0001)));
       circle(
-        i * 20,
-        j * 20,
+        (i * 40) / PARAMS.cloudDotX,
+        (j * 40) / PARAMS.cloudDotY,
         PARAMS.dotSize * noise(i * 4, j * 0.3, millis() * 0.001)
       );
       /*
