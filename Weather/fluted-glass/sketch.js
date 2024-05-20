@@ -5,6 +5,8 @@ let currentWeather;
 let fadeLength = 100;
 let f = 0;
 
+let tempGraphic, humiGraphic;
+
 // glass
 let font;
 let glassShader;
@@ -41,6 +43,8 @@ const PARAMS = {
   cloudDotX: 5,
   cloudDotY: 5,
   theme: "",
+  tempBlur: 5,
+  humiBlur: 5,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -125,6 +129,14 @@ function setup() {
     min: 0,
     max: 10,
   });
+  pane.addInput(PARAMS, "tempBlur", {
+    min: 0,
+    max: 50,
+  });
+  pane.addInput(PARAMS, "humiBlur", {
+    min: 0,
+    max: 50,
+  });
   createCanvas(_Width, _Height);
 
   glassShader = createFilterShader(`
@@ -164,17 +176,15 @@ function setup() {
   }
   noiseGra.updatePixels();
   image(noiseGra, 0, 0);
+
+  tempGraphic = createGraphics(width, height);
+  humiGraphic = createGraphics(width, height);
 }
 
 function draw() {
   clear();
   image(noiseGra, 0, 0);
   background(PARAMS.bg);
-  //background(255);
-
-  //drawSun(width / 4 + width / 10, height / 4 + width / 10, width / 5);
-  // drawSun();
-
   fill(PARAMS.TempColor);
 
   // --------------------------------------------
@@ -208,7 +218,7 @@ function draw() {
   glassShader.setUniform("bands", bands);
   glassShader.setUniform("distortion", distortion);
   drawClimateRing(width / 2, height / 2, 150, 28, 70);
-  //filter(glassShader);
+  filter(glassShader);
 }
 
 function drawSun(x, y, size) {
@@ -310,112 +320,6 @@ function mapData(data, max) {
   return mappedData;
 }
 
-function cloudMask1() {
-  beginShape();
-  vertex(60.4429, 6.24134);
-  bezierVertex(54.3785, 7.76171, 55.6838, 17.6367, 54.0468, 18.5943);
-  bezierVertex(51.2041, 20.2573, 37.7013, 20.7799, 35.8062, 29.5221);
-  bezierVertex(33.9111, 38.2643, 21.3558, 37.0448, 15.6704, 36.4112);
-  bezierVertex(12.8277, 35.461, -5.17602, 44.2506, 1.45694, 64.443);
-  bezierVertex(8.0899, 84.6354, 20.4082, 83.9227, 34.8586, 78.934);
-  bezierVertex(56.6594, 71.4077, 76.3146, 82.4974, 87.9223, 77.9838);
-  bezierVertex(99.53, 73.4702, 99.7669, 76.796, 114.217, 81.5471);
-  bezierVertex(125.778, 85.348, 138.301, 80.7553, 143.118, 77.9838);
-  bezierVertex(154.678, 84.0652, 163.254, 83.3684, 166.097, 82.2598);
-  bezierVertex(173.203, 78.934, 185.759, 67.8638, 179.126, 50.1896);
-  bezierVertex(172.493, 32.5153, 155.515, 33.6397, 147.856, 36.4112);
-  bezierVertex(145.582, 14.3659, 127.167, 16.1396, 118.244, 19.782);
-  bezierVertex(105.689, -11.8131, 80.8156, 3.1531, 77.2622, 6.24134);
-  bezierVertex(73.7088, 9.32959, 68.0234, 4.34089, 60.4429, 6.24134);
-  endShape();
-}
-
-function cloudMask2() {
-  beginShape();
-  vertex(22.7496, 45.868);
-  bezierVertex(23.4439, 44.0494, 24.1053, 42.4512, 24.6784, 40.8199);
-  bezierVertex(26.8828, 34.5429, 31.8427, 31.8756, 37.9048, 30.8285);
-  bezierVertex(39.7454, 30.5089, 41.6798, 30.7073, 43.5756, 30.6852);
-  bezierVertex(44.6447, 30.6852, 45.7138, 30.6852, 47.0916, 30.6852);
-  bezierVertex(47.2294, 28.2383, 47.4829, 26.078, 47.4388, 23.9177);
-  bezierVertex(47.3726, 20.8812, 48.5961, 18.5059, 50.4533, 16.2023);
-  bezierVertex(58.8024, 5.80862, 69.9016, 0.821178, 82.8854, 0.0441286);
-  bezierVertex(89.449, -0.347151, 95.6048, 1.90133, 101.276, 5.29059);
-  bezierVertex(106.599, 8.47594, 110.325, 13.0501, 112.959, 18.5941);
-  bezierVertex(113.356, 19.4318, 113.841, 20.2474, 114.414, 21.2835);
-  bezierVertex(120.349, 20.0655, 126.031, 20.1813, 130.947, 24.3696);
-  bezierVertex(135.549, 28.1779, 138.588, 33.5473, 139.483, 39.4532);
-  bezierVertex(140.767, 39.4532, 141.831, 39.4532, 142.889, 39.4532);
-  bezierVertex(146.03, 39.4863, 149.161, 39.332, 152.258, 40.1917);
-  bezierVertex(156.881, 41.4592, 160.557, 43.862, 163.12, 47.9566);
-  bezierVertex(166.796, 53.8148, 169.182, 60.0478, 168.989, 67.0963);
-  bezierVertex(168.818, 73.5552, 166.234, 78.5812, 160.723, 82.1964);
-  bezierVertex(156.51, 84.997, 151.772, 86.9131, 146.796, 87.8286);
-  bezierVertex(142.479, 88.571, 138.124, 89.077, 133.752, 89.3442);
-  bezierVertex(131.859, 89.3822, 129.97, 89.1634, 128.136, 88.6939);
-  bezierVertex(125.524, 88.1428, 123.176, 88.6939, 120.773, 89.7244);
-  bezierVertex(116.596, 91.532, 112.435, 93.3947, 108.164, 94.9543);
-  bezierVertex(105.513, 95.9294, 102.763, 96.6131, 99.964, 96.9934);
-  bezierVertex(93.8732, 97.8613, 87.6913, 97.878, 81.5959, 97.043);
-  bezierVertex(76.0353, 96.2274, 71.1636, 93.6041, 66.5454, 90.507);
-  bezierVertex(65.6361, 89.8953, 64.7157, 89.3001, 63.6356, 88.5781);
-  bezierVertex(62.0208, 89.504, 60.4502, 90.507, 58.7914, 91.3336);
-  bezierVertex(57.2373, 92.1052, 55.6116, 92.7224, 53.9913, 93.3396);
-  bezierVertex(50.7369, 94.5629, 47.304, 95.2443, 43.8291, 95.3566);
-  bezierVertex(38.6212, 95.5661, 33.4464, 95.77, 28.3046, 94.4418);
-  bezierVertex(15.7451, 91.2124, 6.56379, 83.9269, 1.48266, 71.9294);
-  bezierVertex(-0.688668, 66.8097, -0.319432, 61.4255, 1.58186, 56.2176);
-  bezierVertex(2.04432, 55.0481, 2.72932, 53.9794, 3.59888, 53.0708);
-  bezierVertex(7.86989, 48.4967, 13.0612, 45.8074, 19.4705, 45.868);
-  vertex(22.7496, 45.868);
-  endShape();
-  vertex(63.9993, 81.1989);
-  bezierVertex(67.1406, 84.8307, 71.1636, 86.9855, 75.4732, 88.5285);
-  bezierVertex(81.8494, 90.7935, 88.4901, 90.9754, 95.1253, 90.3141);
-  bezierVertex(100.791, 89.763, 106.373, 88.6608, 111.405, 85.7289);
-  bezierVertex(113.174, 84.6984, 115.026, 83.8001, 116.795, 82.7695);
-  bezierVertex(117.468, 82.3597, 118.217, 82.0882, 118.996, 81.9709);
-  bezierVertex(119.776, 81.8536, 120.571, 81.8928, 121.336, 82.0862);
-  bezierVertex(129.9, 84.0536, 138.32, 82.7144, 146.626, 80.6588);
-  bezierVertex(150.417, 79.7165, 154.253, 78.6198, 157.532, 76.2501);
-  bezierVertex(160.183, 74.3267, 162.337, 71.9735, 162.916, 68.7386);
-  bezierVertex(163.638, 64.6935, 163.952, 60.5823, 161.682, 56.7687);
-  bezierVertex(161.065, 55.6659, 160.545, 54.5116, 160.127, 53.3188);
-  bezierVertex(158.717, 49.5989, 155.774, 47.615, 152.285, 46.2923);
-  bezierVertex(150.801, 45.7538, 149.261, 45.3841, 147.695, 45.1901);
-  bezierVertex(143.754, 44.639, 139.819, 44.5068, 136.044, 46.1325);
-  bezierVertex(134.854, 46.645, 133.884, 46.2593, 133.096, 45.3334);
-  bezierVertex(132.308, 44.4076, 132.115, 43.3495, 133.096, 42.3961);
-  bezierVertex(134.077, 41.4427, 133.934, 40.4121, 133.823, 39.3099);
-  bezierVertex(133.272, 33.8816, 130.517, 29.8971, 125.849, 27.1857);
-  bezierVertex(124.449, 26.3701, 123.066, 25.819, 121.385, 26.0395);
-  bezierVertex(119.837, 26.2434, 118.189, 25.9623, 116.706, 26.3481);
-  bezierVertex(115.092, 26.7724, 113.609, 27.7203, 112.165, 28.3982);
-  bezierVertex(110.297, 27.814, 109.531, 26.6401, 109.3, 24.8821);
-  bezierVertex(109.107, 23.3501, 108.941, 21.6747, 108.197, 20.3576);
-  bezierVertex(104.973, 14.5215, 100.427, 10.2064, 93.957, 7.9028);
-  bezierVertex(88.4444, 5.90118, 82.4568, 5.60545, 76.7738, 7.0541);
-  bezierVertex(68.7326, 8.92168, 61.5049, 13.3248, 56.1572, 19.6136);
-  bezierVertex(54.4554, 21.5073, 53.3461, 23.8582, 52.9663, 26.3756);
-  bezierVertex(52.6742, 28.58, 52.575, 30.7844, 52.316, 32.9888);
-  bezierVertex(51.9798, 35.8159, 50.6627, 36.8465, 47.9072, 36.6371);
-  bezierVertex(45.8681, 36.4883, 43.796, 36.086, 41.779, 36.2899);
-  bezierVertex(34.3337, 36.9788, 30.5421, 40.0429, 28.9549, 46.7167);
-  bezierVertex(28.7731, 47.4772, 28.6849, 48.2653, 28.5141, 49.0313);
-  bezierVertex(28.3848, 49.7893, 28.0984, 50.5118, 27.6732, 51.1525);
-  bezierVertex(27.248, 51.7931, 26.6934, 52.3377, 26.0451, 52.7512);
-  bezierVertex(25.0697, 52.5418, 23.8407, 52.3048, 22.6614, 52.0238);
-  bezierVertex(16.6324, 50.624, 8.50917, 54.9997, 6.49215, 60.7697);
-  bezierVertex(6.29347, 61.368, 6.15501, 61.9846, 6.07882, 62.6104);
-  bezierVertex(5.64498, 65.1864, 5.81755, 67.8282, 6.58285, 70.3259);
-  bezierVertex(7.34815, 72.8237, 8.68511, 75.1087, 10.4876, 76.9995);
-  bezierVertex(15.6514, 82.7089, 22.1103, 85.9714, 29.5501, 87.5751);
-  bezierVertex(35.0611, 88.782, 40.5225, 88.2971, 46.0335, 87.746);
-  bezierVertex(50.5194, 87.2996, 54.6967, 86.1202, 58.4222, 83.519);
-  bezierVertex(60.0758, 82.323, 61.9853, 81.5286, 63.9993, 81.1989);
-  endShape();
-}
-
 function drawClimateRing(cx, cy, radius, temperature, precipitation) {
   let outerRadius = radius;
   let innerRadiusTemp = radius - 23; // Adjusted to remove gap
@@ -423,8 +327,8 @@ function drawClimateRing(cx, cy, radius, temperature, precipitation) {
   let outerRadiusPrecip = radius - 22; // Adjusted to remove gap
 
   // Temperature gradient colors
-  let coldColor = color("#BEC1B0"); // blueish teal
-  let hotColor = color("#b744b8"); // red-orange
+  let coldColor = color("#1A58AB"); // blueish teal
+  let hotColor = color("#AB2222"); // red-orange
 
   // Precipitation gradient colors
   let precipitationColor = color(0, 128, 128, 0); // blueish teal with 0 alpha
@@ -470,8 +374,8 @@ function drawGradientRing(
   endColor
 ) {
   // Create a graphics buffer for the ring
-  let pg = createGraphics(width, height);
-  pg.angleMode(RADIANS);
+  tempGraphic.clear();
+  tempGraphic.angleMode(RADIANS);
 
   let angleStep = 0.1; // Larger step size for performance
   let lineThickness = 8; // Thickness of each line segment
@@ -484,20 +388,20 @@ function drawGradientRing(
   ) {
     let inter = map(angle, startAngle, startAngle + endAngle, 0, 1);
     let col = lerpColor(startColor, endColor, inter);
-    pg.stroke(col);
-    pg.strokeWeight(lineThickness);
+    tempGraphic.stroke(col);
+    tempGraphic.strokeWeight(lineThickness);
 
     let x1 = cx + cos(angle) * outerRadius;
     let y1 = cy + sin(angle) * outerRadius;
     let x2 = cx + cos(angle) * innerRadius;
     let y2 = cy + sin(angle) * innerRadius;
 
-    pg.line(x1, y1, x2, y2);
+    tempGraphic.line(x1, y1, x2, y2);
   }
 
-  pg.filter(BLUR, 5); // Apply blur effect
+  tempGraphic.filter(BLUR, PARAMS.tempBlur); // Apply blur effect
   // Draw the blurred ring onto the main canvas
-  image(pg, 0, 0);
+  image(tempGraphic, 0, 0);
 }
 
 function drawAlphaRing(
@@ -510,6 +414,8 @@ function drawAlphaRing(
   startColor,
   endColor
 ) {
+  humiGraphic.clear();
+  humiGraphic.angleMode(RADIANS);
   let angleStep = 0.1; // Larger step size for performance
   let lineThickness = 8; // Thickness of each line segment
   let gap = 2; // Gap between each line segment
@@ -521,14 +427,18 @@ function drawAlphaRing(
   ) {
     let inter = map(angle, startAngle, startAngle + endAngle, 0, 1);
     let col = lerpColor(startColor, endColor, inter);
-    stroke(col);
-    strokeWeight(lineThickness);
+    humiGraphic.stroke(col);
+    humiGraphic.strokeWeight(lineThickness);
 
     let x1 = cx + cos(angle) * outerRadius;
     let y1 = cy + sin(angle) * outerRadius;
     let x2 = cx + cos(angle) * innerRadius;
     let y2 = cy + sin(angle) * innerRadius;
 
-    line(x1, y1, x2, y2);
+    humiGraphic.line(x1, y1, x2, y2);
   }
+
+  humiGraphic.filter(BLUR, PARAMS.humiBlur); // Apply blur effect
+
+  image(humiGraphic, 0, 0);
 }
