@@ -45,6 +45,8 @@ const PARAMS = {
   theme: "",
   tempBlur: 5,
   humiBlur: 5,
+  bands: 45,
+  distortion: 1.5,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -137,6 +139,15 @@ function setup() {
     min: 0,
     max: 50,
   });
+  pane.addInput(PARAMS, "bands", {
+    min: 0,
+    max: 100,
+    step: 1,
+  });
+  pane.addInput(PARAMS, "distortion", {
+    min: 0,
+    max: 10,
+  });
   createCanvas(_Width, _Height);
 
   glassShader = createFilterShader(`
@@ -214,9 +225,10 @@ function draw() {
   noStroke();
   fill(txtColor);
   textAlign(CENTER, CENTER);
+  fill(color("#7E3328"));
   text(Math.round(currentWeather.high_temperature), width / 2, height / 2);
-  glassShader.setUniform("bands", bands);
-  glassShader.setUniform("distortion", distortion);
+  glassShader.setUniform("bands", PARAMS.bands);
+  glassShader.setUniform("distortion", PARAMS.distortion);
   drawClimateRing(width / 2, height / 2, 150, 28, 70);
   filter(glassShader);
 }
