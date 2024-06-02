@@ -36,17 +36,29 @@ const pane = new Tweakpane.Pane();
 const PARAMS = {
   Time: 0,
   TempColor: "#C62B01",
-  bg: "#f5eeda",
+  movement: false,
+  bg: "#f5f5f5",
   icon: "#6F1A07",
   percepsColorAngle: 50,
   dotSize: 4,
   cloudDotX: 5,
   cloudDotY: 5,
   theme: "",
-  tempBlur: 5,
-  humiBlur: 5,
+  tempBlur: 0,
+  humiBlur: 0,
+  glassFilter: false,
   bands: 45,
   distortion: 1.5,
+  angleStep: 0.02,
+  lineThickness: 0.8,
+  gap: 1,
+  ringGap: 80,
+  circleSize: 6,
+  circleThickness: 1,
+  fillCircle: false,
+  circleAngleStep: 0.1,
+  tempRingSize: 3,
+  tempRingInnerSize: 90,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -104,6 +116,14 @@ function setup() {
   pane.addInput(PARAMS, "bg", {
     view: "color",
   });
+  pane.addInput(PARAMS, "glassFilter"),
+    {
+      view: "checkbox",
+    };
+  pane.addInput(PARAMS, "movement"),
+    {
+      view: "checkbox",
+    };
   pane.addInput(PARAMS, "Time", {
     min: 0,
     max: 23,
@@ -148,6 +168,46 @@ function setup() {
     min: 0,
     max: 10,
   });
+  pane.addInput(PARAMS, "angleStep", {
+    min: 0,
+    max: 10,
+  });
+  pane.addInput(PARAMS, "circleAngleStep", {
+    min: 0,
+    max: 0.4,
+  });
+  pane.addInput(PARAMS, "lineThickness", {
+    min: 0,
+    max: 20,
+  });
+  pane.addInput(PARAMS, "gap", {
+    min: 0,
+    max: 1,
+  });
+  pane.addInput(PARAMS, "ringGap", {
+    min: -50,
+    max: 150,
+  });
+  pane.addInput(PARAMS, "circleSize", {
+    min: 0,
+    max: 20,
+  });
+  pane.addInput(PARAMS, "circleThickness", {
+    min: 0,
+    max: 20,
+  });
+  pane.addInput(PARAMS, "fillCircle", {
+    view: "checkbox",
+  });
+  pane.addInput(PARAMS, "tempRingSize", {
+    min: 0,
+    max: 5,
+  });
+  pane.addInput(PARAMS, "tempRingInnerSize", {
+    min: 0,
+    max: 200,
+  });
+
   createCanvas(_Width, _Height);
 
   glassShader = createFilterShader(`
@@ -218,7 +278,7 @@ function draw() {
   textFont(font);
   const w = (textWidth(txt) || 20) * 1.1;
   const h = textLeading();
-  translate(sin(millis() * 0.001 * motion) * width * 0.05, 0);
+
   // Draw Cloud
   //drawCloud(width / 4, height / 4, "circle", cloudMask2);
   scale(min((width / w) * 0.8, height / h));
@@ -226,11 +286,18 @@ function draw() {
   fill(txtColor);
   textAlign(CENTER, CENTER);
   fill(color("#7E3328"));
-  text(Math.round(currentWeather.high_temperature), width / 2, height / 2);
+  //text(Math.round(currentWeather.high_temperature), width / 2, height / 2);
   glassShader.setUniform("bands", PARAMS.bands);
   glassShader.setUniform("distortion", PARAMS.distortion);
-  drawClimateRing(width / 2, height / 2, 150, 28, 70);
-  filter(glassShader);
+  push();
+  if (PARAMS.movement)
+    translate(sin(millis() * 0.001 * motion) * width * 0.05, 0);
+
+  drawClimateRing(width / 2 - 150 / 2, height / 2 - 150 / 2, 150, 28, 70);
+  pop();
+  if (PARAMS.glassFilter) {
+    filter(glassShader);
+  }
 }
 
 function drawSun(x, y, size) {
@@ -334,17 +401,17 @@ function mapData(data, max) {
 
 function drawClimateRing(cx, cy, radius, temperature, precipitation) {
   let outerRadius = radius;
-  let innerRadiusTemp = radius - 23; // Adjusted to remove gap
-  let innerRadiusPrecip = radius - 45;
-  let outerRadiusPrecip = radius - 22; // Adjusted to remove gap
+  let innerRadiusTemp = radius - PARAMS.tempRingInnerSize; // Adjusted to remove gap
+  let innerRadiusPrecip = radius - 85;
+  let outerRadiusPrecip = radius - PARAMS.ringGap; // Adjusted to remove gap
 
   // Temperature gradient colors
   let coldColor = color("#1A58AB"); // blueish teal
   let hotColor = color("#AB2222"); // red-orange
 
   // Precipitation gradient colors
-  let precipitationColor = color(0, 128, 128, 0); // blueish teal with 0 alpha
-  let maxPrecipitationColor = color(0, 128, 128, 255); // blueish teal with 255 alpha
+  let precipitationColor = color(26, 88, 171, 0); // blueish teal with 0 alpha
+  let maxPrecipitationColor = color(26, 88, 171, 255); // blueish teal with 255 alpha
 
   // Calculate angles based on data
   let tempAngle = map(temperature, 5, 40, 0, TWO_PI);
@@ -389,25 +456,28 @@ function drawGradientRing(
   tempGraphic.clear();
   tempGraphic.angleMode(RADIANS);
 
-  let angleStep = 0.1; // Larger step size for performance
-  let lineThickness = 8; // Thickness of each line segment
-  let gap = 2; // Gap between each line segment
+  let angleStep = PARAMS.angleStep; // Larger step size for performance
+  let lineThickness = PARAMS.lineThickness; // Thickness of each line segment
+  let gap = PARAMS.gap; // Gap between each line segment
 
-  for (
-    let angle = startAngle;
-    angle <= startAngle + endAngle;
-    angle += angleStep + radians(gap)
-  ) {
-    let inter = map(angle, startAngle, startAngle + endAngle, 0, 1);
-    let col = lerpColor(startColor, endColor, inter);
-    tempGraphic.stroke(col);
+  for (let angle = -90; angle <= 270; angle += angleStep + radians(gap)) {
     tempGraphic.strokeWeight(lineThickness);
-
-    let x1 = cx + cos(angle) * outerRadius;
-    let y1 = cy + sin(angle) * outerRadius;
+    let angleToTime = map(angle, -90, 270, 0, 12);
+    //console.log(angle);
+    let tempItem = temp[Math.round(angleToTime)];
+    //console.log(Math.round(angleToTime));
+    //console.log(temp);
+    //console.log(tempItem);
+    let tempIndex = map(tempItem, 20, 40, 0, 1);
+    let col = lerpColor(startColor, endColor, tempIndex);
+    tempGraphic.stroke(col);
+    let x1 = cx + cos(angle) * tempItem * PARAMS.tempRingSize;
+    let y1 = cy + sin(angle) * tempItem * PARAMS.tempRingSize;
     let x2 = cx + cos(angle) * innerRadius;
     let y2 = cy + sin(angle) * innerRadius;
 
+    stroke(col);
+    temp;
     tempGraphic.line(x1, y1, x2, y2);
   }
 
@@ -428,9 +498,9 @@ function drawAlphaRing(
 ) {
   humiGraphic.clear();
   humiGraphic.angleMode(RADIANS);
-  let angleStep = 0.1; // Larger step size for performance
-  let lineThickness = 8; // Thickness of each line segment
-  let gap = 2; // Gap between each line segment
+  let angleStep = PARAMS.circleAngleStep; // Larger step size for performance
+  let lineThickness = PARAMS.circleThickness; // Thickness of each line segment
+  let gap = PARAMS.gap; // Gap between each line segment
 
   for (
     let angle = startAngle;
@@ -447,7 +517,11 @@ function drawAlphaRing(
     let x2 = cx + cos(angle) * innerRadius;
     let y2 = cy + sin(angle) * innerRadius;
 
-    humiGraphic.line(x1, y1, x2, y2);
+    if (PARAMS.fillCircle) {
+      humiGraphic.fill(col);
+    }
+    humiGraphic.circle(x1, y1, PARAMS.circleSize);
+    //humiGraphic.line(x1, y1, x2, y2);
   }
 
   humiGraphic.filter(BLUR, PARAMS.humiBlur); // Apply blur effect
