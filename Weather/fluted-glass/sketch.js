@@ -49,16 +49,16 @@ const PARAMS = {
   glassFilter: false,
   bands: 45,
   distortion: 1.5,
-  angleStep: 0.02,
+  angleStep: 0.04,
   lineThickness: 0.8,
-  gap: 1,
+  gap: 0.01,
   ringGap: 80,
   circleSize: 6,
   circleThickness: 1,
   fillCircle: false,
   circleAngleStep: 0.1,
-  tempRingSize: 3,
-  tempRingInnerSize: 90,
+  tempRingSize: 4,
+  tempRingInnerSize: 96,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -424,7 +424,7 @@ function drawClimateRing(cx, cy, radius, temperature, precipitation) {
     outerRadius,
     innerRadiusTemp,
     -PI / 2,
-    tempAngle,
+    1.5 * PI,
     coldColor,
     hotColor
   );
@@ -456,28 +456,33 @@ function drawGradientRing(
   tempGraphic.clear();
   tempGraphic.angleMode(RADIANS);
 
-  let angleStep = PARAMS.angleStep; // Larger step size for performance
+  let totalAngle = endAngle - startAngle;
+  let numberOfSteps = Math.floor(
+    totalAngle / (PARAMS.angleStep + radians(PARAMS.gap))
+  );
+  let adjustedAngleStep = totalAngle / numberOfSteps;
+
   let lineThickness = PARAMS.lineThickness; // Thickness of each line segment
   let gap = PARAMS.gap; // Gap between each line segment
 
-  for (let angle = -90; angle <= 270; angle += angleStep + radians(gap)) {
+  for (
+    let angle = startAngle;
+    angle <= endAngle;
+    angle += adjustedAngleStep + radians(gap)
+  ) {
     tempGraphic.strokeWeight(lineThickness);
-    let angleToTime = map(angle, -90, 270, 0, 12);
-    //console.log(angle);
+    let angleToTime = map(angle, startAngle, endAngle, 0, 11);
+
     let tempItem = temp[Math.round(angleToTime)];
-    //console.log(Math.round(angleToTime));
-    //console.log(temp);
-    //console.log(tempItem);
     let tempIndex = map(tempItem, 20, 40, 0, 1);
     let col = lerpColor(startColor, endColor, tempIndex);
     tempGraphic.stroke(col);
+
     let x1 = cx + cos(angle) * tempItem * PARAMS.tempRingSize;
     let y1 = cy + sin(angle) * tempItem * PARAMS.tempRingSize;
     let x2 = cx + cos(angle) * innerRadius;
     let y2 = cy + sin(angle) * innerRadius;
 
-    stroke(col);
-    temp;
     tempGraphic.line(x1, y1, x2, y2);
   }
 
