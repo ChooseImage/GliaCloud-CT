@@ -37,7 +37,7 @@ const PARAMS = {
   Time: 0,
   TempColor: "#C62B01",
   movement: false,
-  bg: "#f5f5f5",
+  bg: "#fff5f5",
   icon: "#6F1A07",
   percepsColorAngle: 50,
   dotSize: 4,
@@ -57,10 +57,12 @@ const PARAMS = {
   circleThickness: 1,
   fillCircle: false,
   circleAngleStep: 0.1,
-  tempRingSize: 5,
-  tempRingInnerSize: 126,
+  tempRingSize: 4.1,
+  tempRingInnerSize: 168.32,
   showPerceps: false,
-  tempRingPow: 1,
+  tempRingPow: 1.12,
+  posX: 23.29,
+  posY: 0,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -215,6 +217,14 @@ function setup() {
     min: 0,
     max: 3,
   });
+  pane.addInput(PARAMS, "posX", {
+    min: -width / 2,
+    max: width / 2,
+  });
+  pane.addInput(PARAMS, "posY", {
+    min: -height / 2,
+    max: height / 2,
+  });
 
   createCanvas(_Width, _Height);
 
@@ -301,7 +311,13 @@ function draw() {
   if (PARAMS.movement)
     translate(sin(millis() * 0.001 * motion) * width * 0.05, 0);
 
-  drawClimateRing(width / 2 - 150 / 2, height / 2 - 150 / 2, 200, 28, 70);
+  drawClimateRing(
+    width / 2 - 120 / 2 + PARAMS.posX,
+    height / 2 - 150 / 2 + PARAMS.posY,
+    240,
+    28,
+    70
+  );
   pop();
   if (PARAMS.glassFilter) {
     filter(glassShader);
