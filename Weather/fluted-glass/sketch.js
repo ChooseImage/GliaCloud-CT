@@ -4,8 +4,9 @@ const apiUrl =
 let currentWeather;
 let fadeLength = 100;
 let f = 0;
-
+let currentTemp;
 let tempGraphic, humiGraphic;
+let condition;
 
 // glass
 let font;
@@ -24,9 +25,30 @@ function requestJsonData() {
     });
 }
 
+function capitalizeFirstLetterOfEachLine(text) {
+  return text
+    .split("\n")
+    .map((line) => line.charAt(0).toUpperCase() + line.slice(1))
+    .join("\n");
+}
+
 function loadData(data) {
   // overwrite the quote string
   currentWeather = data;
+  console.log("currentWeather", currentWeather);
+  currentTemp = round(
+    getAverage([
+      currentWeather.high_temperature,
+      currentWeather.low_temperature,
+    ]),
+    1
+  );
+  currentTemp = Math.round(
+    (currentWeather.high_temperature + currentWeather.low_temperature) / 2
+  );
+  condition = currentWeather.description.replace(/ /g, "\n");
+  condition = capitalizeFirstLetterOfEachLine(condition);
+  console.log("currentTemp", currentTemp);
   print(data);
 }
 
@@ -35,34 +57,31 @@ let mappedTemps, mappedPerceps, mappedWind, mappedHumidity;
 const pane = new Tweakpane.Pane();
 const PARAMS = {
   Time: 0,
-  TempColor: "#C62B01",
   movement: false,
   bg: "#fff5f5",
-  icon: "#6F1A07",
   percepsColorAngle: 50,
-  dotSize: 4,
-  cloudDotX: 5,
-  cloudDotY: 5,
   theme: "",
+  toggleTempBlur: false,
+  togglePercepBlur: false,
   tempBlur: 0,
-  humiBlur: 0,
+  percepBlur: 0,
   glassFilter: false,
   bands: 45,
   distortion: 1.5,
-  angleStep: 0.04,
-  lineThickness: 1.2,
-  gap: 0.01,
-  ringGap: 80,
-  circleSize: 6,
-  circleThickness: 1,
-  fillCircle: false,
-  circleAngleStep: 0.1,
+  angleStep: 0.03,
+  lineThickness: 0.87,
+  gap: 0.16,
+  circleSize: 2.74,
   tempRingSize: 4.1,
-  tempRingInnerSize: 168.32,
-  showPerceps: false,
+  tempRingInnerSize: 136,
+  showTemp: true,
+  showPerceps: true,
   tempRingPow: 1.12,
-  posX: 23.29,
+  posX: 7.61,
   posY: 0,
+  percepGap: 0.1,
+  percepsAngleStep: 0.07,
+  ringGap: 4,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -90,8 +109,8 @@ const weatherData = [];
 let ys = [];
 let amount = 30;
 let noiseGra;
-const [_Width, _Height] = [480, 800];
-let fontMono, fontSerif;
+const [_Width, _Height] = [480, 860];
+let fontMono, fontSerif, abcOracleLight, abcOracleGreek;
 let date = new Date();
 let formattedTime =
   date.getHours() +
@@ -102,24 +121,42 @@ let formattedTime =
 function preload() {
   fontMono = loadFont("assets/fonts/NeueMet.ttf");
   fontSerif = loadFont("assets/fonts/Harmond SemiBold Condensed.ttf");
+  abcOracleLight = loadFont("assets/fonts/ABCOracle-Light-Trial.ttf");
+  abcOracleGreek = loadFont("assets/fonts/ABCOracleGreek-Md-Trial.ttf");
   font = loadFont(
     "https://fonts.gstatic.com/s/prompt/v10/-W_6XJnvUD7dzB2KZeKka2MrUZEtdzow.ttf"
   );
 }
 
 function setup() {
-  textFont(fontSerif);
+  textFont(abcOracleGreek);
   blendMode(SCREEN);
   requestJsonData();
   mappedTemps = mapData(temp, 40);
   mappedPerceps = mapData(perceps, 40);
-  // data prep
 
+  const shaders = pane.addFolder({
+    title: "Shaders",
+    expanded: false,
+  });
+
+  const temperature = pane.addFolder({
+    title: "Temperature",
+    expanded: false,
+  });
+
+  const percepitation = pane.addFolder({
+    title: "Percepitation",
+    expanded: false,
+  });
+
+  // data prep
+  console.log("perceps", perceps);
   // Pane
   pane.addInput(PARAMS, "bg", {
     view: "color",
   });
-  pane.addInput(PARAMS, "glassFilter"),
+  shaders.addInput(PARAMS, "glassFilter"),
     {
       view: "checkbox",
     };
@@ -132,88 +169,64 @@ function setup() {
     max: 23,
     step: 1,
   });
-  pane.addInput(PARAMS, "TempColor", {
-    view: "color",
-  });
-  pane.addInput(PARAMS, "icon", {
-    view: "color",
-  });
   pane.addInput(PARAMS, "percepsColorAngle", {
     min: 0,
     max: 360,
   });
-  pane.addInput(PARAMS, "dotSize", {
-    min: 0,
-    max: 40,
+  shaders.addInput(PARAMS, "toggleTempBlur", {
+    view: "checkbox",
   });
-  pane.addInput(PARAMS, "cloudDotX", {
-    min: 0,
-    max: 10,
+  shaders.addInput(PARAMS, "togglePercepBlur", {
+    view: "checkbox",
   });
-  pane.addInput(PARAMS, "cloudDotY", {
-    min: 0,
-    max: 10,
-  });
-  pane.addInput(PARAMS, "tempBlur", {
+  shaders.addInput(PARAMS, "tempBlur", {
     min: 0,
     max: 50,
   });
-  pane.addInput(PARAMS, "humiBlur", {
+  shaders.addInput(PARAMS, "percepBlur", {
     min: 0,
     max: 50,
   });
-  pane.addInput(PARAMS, "bands", {
+  shaders.addInput(PARAMS, "bands", {
     min: 0,
     max: 100,
     step: 1,
   });
-  pane.addInput(PARAMS, "distortion", {
+  shaders.addInput(PARAMS, "distortion", {
     min: 0,
     max: 10,
   });
-  pane.addInput(PARAMS, "angleStep", {
+  temperature.addInput(PARAMS, "angleStep", {
     min: 0,
-    max: 10,
+    max: 0.5,
   });
-  pane.addInput(PARAMS, "circleAngleStep", {
-    min: 0,
-    max: 0.4,
-  });
-  pane.addInput(PARAMS, "lineThickness", {
+  temperature.addInput(PARAMS, "lineThickness", {
     min: 0,
     max: 20,
   });
-  pane.addInput(PARAMS, "gap", {
+  temperature.addInput(PARAMS, "gap", {
     min: 0,
     max: 1,
   });
-  pane.addInput(PARAMS, "ringGap", {
-    min: -50,
-    max: 150,
-  });
-  pane.addInput(PARAMS, "circleSize", {
+  percepitation.addInput(PARAMS, "circleSize", {
     min: 0,
-    max: 20,
+    max: 7,
   });
-  pane.addInput(PARAMS, "circleThickness", {
-    min: 0,
-    max: 20,
-  });
-  pane.addInput(PARAMS, "fillCircle", {
-    view: "checkbox",
-  });
-  pane.addInput(PARAMS, "tempRingSize", {
+  temperature.addInput(PARAMS, "tempRingSize", {
     min: 0,
     max: 5,
   });
-  pane.addInput(PARAMS, "tempRingInnerSize", {
+  temperature.addInput(PARAMS, "tempRingInnerSize", {
     min: 0,
     max: 200,
+  });
+  pane.addInput(PARAMS, "showTemp", {
+    view: "checkbox",
   });
   pane.addInput(PARAMS, "showPerceps", {
     view: "checkbox",
   });
-  pane.addInput(PARAMS, "tempRingPow", {
+  temperature.addInput(PARAMS, "tempRingPow", {
     min: 0,
     max: 3,
   });
@@ -224,6 +237,18 @@ function setup() {
   pane.addInput(PARAMS, "posY", {
     min: -height / 2,
     max: height / 2,
+  });
+  percepitation.addInput(PARAMS, "percepGap", {
+    min: 0.01,
+    max: 5,
+  });
+  percepitation.addInput(PARAMS, "percepsAngleStep", {
+    min: 0.001,
+    max: 0.4,
+  });
+  pane.addInput(PARAMS, "ringGap", {
+    min: 0,
+    max: 50,
   });
 
   createCanvas(_Width, _Height);
@@ -268,13 +293,13 @@ function setup() {
 
   tempGraphic = createGraphics(width, height);
   humiGraphic = createGraphics(width, height);
+  percepsGraphic = createGraphics(width, height);
 }
 
 function draw() {
   clear();
   image(noiseGra, 0, 0);
   background(PARAMS.bg);
-  fill(PARAMS.TempColor);
 
   // --------------------------------------------
 
@@ -292,13 +317,26 @@ function draw() {
     );
   }
 
-  textSize(50);
-  textFont(font);
+  push();
+  textAlign(LEFT);
+  textSize(32);
+  fill("#ff5050");
+  textFont(abcOracleGreek);
+  text("Taipei", 60, 70);
+  textFont(abcOracleLight);
+  textSize(90);
+  //console.log("temperture", temperture);
+  text(`${currentTemp}º`, 60, 135);
+  textSize(28);
+  textFont(abcOracleGreek);
+  text(`High: ${Math.round(currentWeather.high_temperature)}º`, 60, 690);
+  text(`Low:  ${Math.round(currentWeather.low_temperature)}º`, 60, 725);
+  text(condition, 340, 705);
+  pop();
+
   const w = (textWidth(txt) || 20) * 1.1;
   const h = textLeading();
 
-  // Draw Cloud
-  //drawCloud(width / 4, height / 4, "circle", cloudMask2);
   scale(min((width / w) * 0.8, height / h));
   noStroke();
   fill(txtColor);
@@ -352,60 +390,6 @@ function drawSun(x, y, size) {
   pop();
 }
 
-// Draw Cloud
-function drawCloud(x, y, type, mask) {
-  push();
-  translate(x, y);
-  noStroke();
-
-  // Create a gradient mask
-  let gradientMask = createGraphics(100, 100);
-  gradientMask.noFill();
-  for (let r = 0; r < 50; r++) {
-    let alpha = map(r, 0, 50, 255, 0);
-    gradientMask.stroke(255, alpha);
-    gradientMask.ellipse(50, 50, r * 2, r * 2);
-  }
-
-  // Draw cloud with gradient mask
-  for (let i = 0; i < 60; i++) {
-    for (let j = 0; j < 40; j++) {
-      if (type === "circle") {
-        fill(255);
-        let cloudSize =
-          PARAMS.dotSize * noise(i * 4, j * 0.3, millis() * 0.001);
-        ellipse(
-          (i * 40) / PARAMS.cloudDotX,
-          (j * 40) / PARAMS.cloudDotY,
-          cloudSize,
-          cloudSize
-        );
-        image(
-          gradientMask,
-          (i * 40) / PARAMS.cloudDotX - 50,
-          (j * 40) / PARAMS.cloudDotY - 50
-        );
-      } else if (type === "rect") {
-        fill(255);
-        let cloudSize =
-          PARAMS.dotSize * noise(i * 4, j * 0.3, millis() * 0.001);
-        rect(
-          (i * 40) / PARAMS.cloudDotX,
-          (j * 40) / PARAMS.cloudDotY,
-          cloudSize,
-          cloudSize
-        );
-        image(
-          gradientMask,
-          (i * 40) / PARAMS.cloudDotX - 50,
-          (j * 40) / PARAMS.cloudDotY - 50
-        );
-      }
-    }
-  }
-  pop();
-}
-
 // -------------------- UTILS -------------------------------
 const getAverage = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
 const getWeightedAverage = (arr, weights) =>
@@ -426,44 +410,36 @@ function mapData(data, max) {
 function drawClimateRing(cx, cy, radius, temperature, precipitation) {
   let outerRadius = radius;
   let innerRadiusTemp = radius - PARAMS.tempRingInnerSize; // Adjusted to remove gap
-  let innerRadiusPrecip = radius - 85;
-  let outerRadiusPrecip = radius - PARAMS.ringGap; // Adjusted to remove gap
 
   // Temperature gradient colors
   let coldColor = color("#BCD9D7"); // blueish teal
   let hotColor = color("#FBAD6F"); // red-orange
 
-  // Precipitation gradient colors
-  let precipitationColor = color(26, 88, 171, 0); // blueish teal with 0 alpha
-  let maxPrecipitationColor = color(26, 88, 171, 255); // blueish teal with 255 alpha
-
-  // Calculate angles based on data
-  let tempAngle = map(temperature, 5, 40, 0, TWO_PI);
-  let precipAngle = map(precipitation, 0, 100, 0, TWO_PI);
-
   // Draw temperature ring
-  drawGradientRing(
-    cx,
-    cy,
-    outerRadius,
-    innerRadiusTemp,
-    -PI / 2,
-    1.5 * PI,
-    hotColor,
-    coldColor
-  );
+  if (PARAMS.showTemp) {
+    drawGradientRing(
+      cx,
+      cy,
+      outerRadius,
+      innerRadiusTemp,
+      -PI / 2,
+      1.5 * PI,
+      hotColor,
+      coldColor
+    );
+  }
 
   // Draw precipitation ring
   if (PARAMS.showPerceps) {
     drawAlphaRing(
       cx,
       cy,
-      outerRadiusPrecip,
-      innerRadiusPrecip,
+      outerRadius,
+      innerRadiusTemp,
       -PI / 2,
-      precipAngle,
-      precipitationColor,
-      maxPrecipitationColor
+      1.5 * PI,
+      hotColor,
+      coldColor
     );
   }
 }
@@ -534,7 +510,10 @@ function drawGradientRing(
     );
   }
 
-  tempGraphic.filter(BLUR, PARAMS.tempBlur); // Apply blur effect
+  if (PARAMS.toggleTempBlur) {
+    tempGraphic.filter(BLUR, PARAMS.tempBlur); // Apply blur effect
+  }
+
   // Draw the blurred ring onto the main canvas
   image(tempGraphic, 0, 0);
 }
@@ -549,43 +528,48 @@ function drawAlphaRing(
   startColor,
   endColor
 ) {
-  humiGraphic.clear();
-  humiGraphic.angleMode(RADIANS);
-  let angleStep = PARAMS.circleAngleStep; // Larger step size for performance
-  let lineThickness = PARAMS.circleThickness; // Thickness of each line segment
-  let gap = PARAMS.gap; // Gap between each line segment
+  // Create a graphics buffer for the ring
+  percepsGraphic.clear();
+  percepsGraphic.angleMode(RADIANS);
+  const radius = innerRadius - PARAMS.ringGap;
 
   let totalAngle = endAngle - startAngle;
-  let numberOfSteps = Math.floor(totalAngle / (angleStep + radians(gap)));
+  let numberOfSteps = Math.floor(
+    totalAngle / (PARAMS.percepsAngleStep + radians(PARAMS.percepGap))
+  );
   let adjustedAngleStep = totalAngle / numberOfSteps;
+
+  let lineThickness = PARAMS.lineThickness; // Thickness of each line segment
+  let gap = PARAMS.percepGap; // Gap between each line segment
 
   for (
     let angle = startAngle;
     angle <= endAngle;
-    angle += angleStep + radians(gap)
+    angle += adjustedAngleStep + radians(gap)
   ) {
-    let inter = map(angle, startAngle, startAngle + endAngle, 0, 1);
+    percepsGraphic.strokeWeight(lineThickness);
     let angleToTime = map(angle, startAngle, endAngle, 0, 11);
-    let humidityItem = humidity[Math.round(angleToTime)];
-    let col = lerpColor(startColor, endColor, inter);
-    humiGraphic.stroke(col);
-    humiGraphic.strokeWeight(lineThickness);
 
-    let x1 = cx + cos(angle) * outerRadius;
-    let y1 = cy + sin(angle) * outerRadius;
-    let x2 = cx + cos(angle) * innerRadius;
-    let y2 = cy + sin(angle) * innerRadius;
-
-    if (PARAMS.fillCircle) {
-      humiGraphic.fill(col);
+    let percepItem = perceps[Math.round(angleToTime)];
+    let amount = Math.round(map(percepItem, 0, 1, 0, 10));
+    for (let i = 0; i < amount; i++) {
+      let posX = cx + cos(angle) * (radius - i * 5);
+      let posY = cy + sin(angle) * (radius - i * 5);
+      const percepColor = color("#0057FF");
+      percepColor.setAlpha(55 + i * 20);
+      percepsGraphic.fill(percepColor);
+      percepsGraphic.noStroke();
+      percepsGraphic.circle(posX, posY, PARAMS.circleSize);
     }
-    humiGraphic.circle(x1, y1, PARAMS.circleSize);
-    humiGraphic.line(x1, y1, x2, y2);
+
+    //tempGraphic.line(x1, y1, x2, y2);
+    //let currentLength = dist(x1, y1, x2, y2);
   }
-
-  humiGraphic.filter(BLUR, PARAMS.humiBlur); // Apply blur effect
-
-  image(humiGraphic, 0, 0);
+  if (PARAMS.togglePercepBlur) {
+    percepsGraphic.filter(BLUR, PARAMS.percepBlur); // Apply blur effect
+  }
+  // Draw the blurred ring onto the main canvas
+  image(percepsGraphic, 0, 0);
 }
 
 function gradientLine(

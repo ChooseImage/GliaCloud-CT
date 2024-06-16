@@ -53,6 +53,17 @@ canvas{
   position: absolute;
 }
 
+#weather h1{
+  font-family: "MaxiRoundVar";
+  font-size: 2rem;
+  font-weight: 400;
+  font-stretch: 130%;
+  color: white;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
 .title{
   display:none;
   text-align: left;
