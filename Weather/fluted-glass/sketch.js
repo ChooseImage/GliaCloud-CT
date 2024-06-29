@@ -8,6 +8,8 @@ let currentTemp;
 let tempGraphic, humiGraphic;
 let condition;
 
+let textGraphic;
+
 // glass
 let font;
 let glassShader;
@@ -33,7 +35,6 @@ function capitalizeFirstLetterOfEachLine(text) {
 }
 
 function loadData(data) {
-  // overwrite the quote string
   currentWeather = data;
   console.log("currentWeather", currentWeather);
   currentTemp = round(
@@ -72,13 +73,13 @@ const PARAMS = {
   lineThickness: 0.87,
   gap: 0.16,
   circleSize: 2.74,
-  tempRingSize: 4.1,
+  tempRingSize: 5,
   tempRingInnerSize: 136,
   showTemp: true,
   showPerceps: true,
   tempRingPow: 1.12,
   posX: 7.61,
-  posY: 0,
+  posY: -2,
   percepGap: 0.1,
   percepsAngleStep: 0.07,
   ringGap: 4,
@@ -134,6 +135,8 @@ function setup() {
   requestJsonData();
   mappedTemps = mapData(temp, 40);
   mappedPerceps = mapData(perceps, 40);
+
+  textGraphic = createGraphics(_Width, _Height);
 
   const shaders = pane.addFolder({
     title: "Shaders",
@@ -210,11 +213,11 @@ function setup() {
   });
   percepitation.addInput(PARAMS, "circleSize", {
     min: 0,
-    max: 7,
+    max: 10,
   });
   temperature.addInput(PARAMS, "tempRingSize", {
     min: 0,
-    max: 5,
+    max: 8,
   });
   temperature.addInput(PARAMS, "tempRingInnerSize", {
     min: 0,
@@ -276,7 +279,6 @@ function setup() {
     const y = (height / amount) * i;
     ys.push(y);
   }
-  // Noise texture
   noiseGra = createGraphics(_Width, _Height);
   noiseGra.loadPixels();
   for (let x = 0; x <= width; x++) {
@@ -301,11 +303,8 @@ function draw() {
   image(noiseGra, 0, 0);
   background(PARAMS.bg);
 
-  // --------------------------------------------
+  forecast = [PARAMS.Time, temp[PARAMS.Time], humidity[PARAMS.Time]];
 
-  forecast = [PARAMS.Time, temp[PARAMS.Time], humidity[PARAMS.Time]]; // time, temp, humidity
-
-  let temperture = forecast[1].toString().slice(0, 2);
   textSize(50);
   if (currentWeather) {
     temperture = round(
@@ -317,32 +316,10 @@ function draw() {
     );
   }
 
-  push();
-  textAlign(LEFT);
-  textSize(32);
-  fill("#ff5050");
-  textFont(abcOracleGreek);
-  text("Taipei", 60, 70);
-  textFont(abcOracleLight);
-  textSize(90);
-  //console.log("temperture", temperture);
-  text(`${currentTemp}º`, 60, 135);
-  textSize(28);
-  textFont(abcOracleGreek);
-  text(`High: ${Math.round(currentWeather.high_temperature)}º`, 60, 690);
-  text(`Low:  ${Math.round(currentWeather.low_temperature)}º`, 60, 725);
-  text(condition, 340, 705);
-  pop();
-
-  const w = (textWidth(txt) || 20) * 1.1;
-  const h = textLeading();
-
-  scale(min((width / w) * 0.8, height / h));
   noStroke();
   fill(txtColor);
   textAlign(CENTER, CENTER);
   fill(color("#7E3328"));
-  //text(Math.round(currentWeather.high_temperature), width / 2, height / 2);
   glassShader.setUniform("bands", PARAMS.bands);
   glassShader.setUniform("distortion", PARAMS.distortion);
   push();
@@ -350,8 +327,8 @@ function draw() {
     translate(sin(millis() * 0.001 * motion) * width * 0.05, 0);
 
   drawClimateRing(
-    width / 2 - 120 / 2 + PARAMS.posX,
-    height / 2 - 150 / 2 + PARAMS.posY,
+    width / 2 + PARAMS.posX,
+    height / 2 + PARAMS.posY,
     240,
     28,
     70
@@ -360,13 +337,13 @@ function draw() {
   if (PARAMS.glassFilter) {
     filter(glassShader);
   }
+
+  drawText(textGraphic);
 }
 
 function drawSun(x, y, size) {
   push();
   translate(x, y);
-  // Mask setting
-  //Mask
   beginClip();
   circle(0, 0, size);
   endClip();
@@ -385,7 +362,7 @@ function drawSun(x, y, size) {
     if (ys[i] > height) {
       ys[i] = 0;
     }
-    ys[i] += 0.3; // Speed
+    ys[i] += 0.3;
   }
   pop();
 }
@@ -398,7 +375,6 @@ const round = (num, places) => {
   Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
 };
 function mapData(data, max) {
-  // return a new array with the temps mapped to the canvasheight
   let maxData = Math.max(...data);
   let minData = Math.min(...data);
   let mappedData = data.map((dataI) => {
@@ -598,3 +574,34 @@ function gradientLine(
   ctx.lineTo(x2, y2);
   ctx.stroke();
 }
+
+const drawText = (textGraphic) => {
+  textGraphic.clear();
+  textGraphic.resetMatrix();
+  textGraphic.push();
+  textGraphic.textAlign(LEFT);
+  textGraphic.textSize(32);
+  textGraphic.fill("#ff5050");
+  textGraphic.textFont(abcOracleGreek);
+  textGraphic.text("Taipei", 60, 70);
+  textGraphic.textFont(abcOracleLight);
+  textGraphic.textSize(90);
+  textGraphic.text(`${currentTemp}º`, 60, 155);
+  textGraphic.textSize(28);
+  textGraphic.textFont(abcOracleGreek);
+  textGraphic.text(
+    `High: ${Math.round(currentWeather.high_temperature)}º`,
+    60,
+    690
+  );
+  textGraphic.text(
+    `Low:  ${Math.round(currentWeather.low_temperature)}º`,
+    60,
+    725
+  );
+  textGraphic.textSize(22);
+  textGraphic.text(condition, 300, 690);
+  textGraphic.pop();
+
+  image(textGraphic, 0, 0);
+};
