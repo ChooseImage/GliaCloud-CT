@@ -1,0 +1,98 @@
+
+@font-face {
+  font-family: "MaxiRoundVar";
+  src: url("assets/fonts/ABCMaxiRoundVariable-Trial.ttf") format("truetype-variations");
+}
+
+
+@font-face {
+  font-family: "Camera";
+  src: url("assets/fonts/ABCCameraVariable-Trial.ttf") format("truetype-variations");
+}
+
+
+@font-face {
+  font-family: "Oracle";
+  src: url("assets/fonts/ABCOracleTripleVariable-Trial.ttf") format("truetype-variations");
+}
+
+@font-face {
+  font-family: "Helvetica";
+  src: url('https://fonts.cdnfonts.com/css/helvetica-neue-55');
+}
+
+* {
+  display:border-box;
+  margin:0;
+  padding:0;
+}
+
+html{
+  background: rgb(230, 230, 230);
+}
+canvas {
+  display: block;
+  position: absolute;
+}
+
+main {
+  margin: auto;
+  position: relative;
+  width:80vw;
+}
+
+canvas{
+  position:absolute;
+  top:10vh;
+  left:0;
+  z-index: -999;
+  border-radius: 5px;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
+}
+
+#weather{
+  top: 10vh;
+  left:0;
+  width: 840px;
+  height: 500px;
+  position: absolute;
+}
+
+#weather h1{
+  font-family: "MaxiRoundVar";
+  font-size: 2rem;
+  font-weight: 400;
+  font-stretch: 130%;
+  color: white;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.title{
+  padding: 4%;
+  text-align: left;
+  position:absolute;
+  color: black;
+  text-align: center;
+  font-feature-settings: "ss03";
+  font-variation-settings: "wdth" 215;
+  font-stretch: 130%;
+}
+
+.title h2 {
+  text-align: left;
+  font-weight: 400;
+  font-size: 2rem;
+  font-stretch: 130%;
+
+}
+
+.title p {
+  font-family: Helvetica;
+  text-align: left;
+  font-weight: 400;
+  font-size: 2rem;
+  line-height: 120%;
+}
+
