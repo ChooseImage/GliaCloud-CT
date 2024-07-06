@@ -9,7 +9,8 @@ let tempGraphic, humiGraphic;
 let condition;
 
 let textGraphic;
-
+let xOffset = 0;
+let yOffset = 10000; // Start at a different value to get different noise
 // glass
 let font;
 let glassShader;
@@ -323,17 +324,47 @@ function draw() {
   glassShader.setUniform("bands", PARAMS.bands);
   glassShader.setUniform("distortion", PARAMS.distortion);
   push();
-  if (PARAMS.movement)
-    translate(sin(millis() * 0.001 * motion) * width * 0.05, 0);
+  if (PARAMS.movement) {
+    xOffset += 0.0005 * motion;
+    yOffset += 0.0005 * motion;
+  }
 
+  let xMovement = PARAMS.movement ? (noise(xOffset) - 0.5) * width : 0;
+  let yMovement = PARAMS.movement ? (noise(yOffset) - 0.5) * height : 0;
+
+  // First climate ring
+  push();
   drawClimateRing(
-    width / 2 + PARAMS.posX,
-    height / 2 + PARAMS.posY,
+    width / 2 + PARAMS.posX + xMovement,
+    height / 2 + PARAMS.posY + yMovement,
     240,
     28,
     70
   );
   pop();
+
+  // Second climate ring
+  push();
+  drawClimateRing(
+    width / 3 + PARAMS.posX + xMovement * 0.8,
+    height / 3 + PARAMS.posY + yMovement * 0.8,
+    240,
+    28,
+    70
+  );
+  pop();
+
+  // Third climate ring
+  push();
+  drawClimateRing(
+    (2 * width) / 3 + PARAMS.posX + xMovement * 1.2,
+    (2 * height) / 3 + PARAMS.posY + yMovement * 1.2,
+    240,
+    28,
+    70
+  );
+  pop();
+
   if (PARAMS.glassFilter) {
     filter(glassShader);
   }
