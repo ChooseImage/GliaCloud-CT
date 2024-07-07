@@ -61,8 +61,8 @@ let mappedTemps, mappedPerceps, mappedWind, mappedHumidity;
 const pane = new Tweakpane.Pane();
 const PARAMS = {
   Time: 0,
-  movement: false,
-  bg: "#fff5f5",
+  movement: true,
+  bg: "#ffffff",
   percepsColorAngle: 50,
   theme: "",
   toggleTempBlur: true,
@@ -77,7 +77,7 @@ const PARAMS = {
   percepBlur: 0,
   ringBlur1: 0,
   ringBlur2: 3.7,
-  ringBlur3: 1.6,
+  ringBlur3: 1.74,
   glassFilter: false,
   bands: 45,
   distortion: 1.5,
@@ -299,7 +299,7 @@ function draw() {
     filter(glassShader);
   }
 
-  //drawText(textGraphic);
+  drawText(textGraphic);
 }
 
 function drawSun(x, y, size) {
@@ -561,10 +561,10 @@ const drawText = (textGraphic) => {
   textGraphic.textSize(32);
   textGraphic.fill("#ff5050");
   textGraphic.textFont(abcOracleGreek);
-  textGraphic.text("Taipei", 60, 70);
+  textGraphic.text("Taipei", 700, 370);
   textGraphic.textFont(abcOracleLight);
-  textGraphic.textSize(90);
-  textGraphic.text(`${currentTemp}º`, 60, 155);
+  textGraphic.textSize(60);
+  textGraphic.text(`${currentTemp}º`, 700, 430);
   textGraphic.textSize(28);
   textGraphic.textFont(abcOracleGreek);
   textGraphic.text(

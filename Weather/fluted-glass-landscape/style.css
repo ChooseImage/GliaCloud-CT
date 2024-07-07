@@ -21,6 +21,11 @@
   src: url('https://fonts.cdnfonts.com/css/helvetica-neue-55');
 }
 
+@font-face {
+  font-family: "Helvetica-light";
+  src: url('assets/fonts/Helvetica\ Light.ttf');
+}
+
 * {
   display:border-box;
   margin:0;
@@ -70,6 +75,7 @@ canvas{
 }
 
 .title{
+  position: relative;
   padding: 4%;
   text-align: left;
   position:absolute;
@@ -92,7 +98,24 @@ canvas{
   font-family: Helvetica;
   text-align: left;
   font-weight: 400;
-  font-size: 2rem;
-  line-height: 120%;
+  font-size: 1.8rem;
+  line-height: 130%;
+  width: 70%;
+  word-break: break-word;
+  letter-spacing: 0.007rem;
+}
+
+#perceptation {
+  position: absolute;
+  top:395px;
+}
+
+.title img {
+  position: absolute;
+  top: 71px;
+  left:487px;
+  width: 60px;
+  height: 40px;
+  display: cover;
 }
 
