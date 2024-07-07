@@ -5,8 +5,10 @@ let currentWeather;
 let fadeLength = 100;
 let f = 0;
 let currentTemp;
-let tempGraphic, humiGraphic;
+let tempGraphic;
 let condition;
+let tempGraphic1, tempGraphic2, tempGraphic3;
+let percepsGraphic1, percepsGraphic2, percepsGraphic3;
 
 let textGraphic;
 let xOffset = 0;
@@ -63,10 +65,13 @@ const PARAMS = {
   bg: "#fff5f5",
   percepsColorAngle: 50,
   theme: "",
-  toggleTempBlur: false,
-  togglePercepBlur: false,
+  toggleTempBlur: true,
+  togglePercepBlur: true,
   tempBlur: 0,
   percepBlur: 0,
+  ringBlur1: 0,
+  ringBlur2: 3.7,
+  ringBlur3: 1.3,
   glassFilter: false,
   bands: 45,
   distortion: 1.5,
@@ -75,6 +80,9 @@ const PARAMS = {
   gap: 0.16,
   circleSize: 2.74,
   tempRingSize: 5,
+  tempRingSize1: 5,
+  tempRingSize2: 3.6,
+  tempRingSize3: 7,
   tempRingInnerSize: 136,
   showTemp: true,
   showPerceps: true,
@@ -138,122 +146,7 @@ function setup() {
   mappedPerceps = mapData(perceps, 40);
 
   textGraphic = createGraphics(_Width, _Height);
-
-  const shaders = pane.addFolder({
-    title: "Shaders",
-    expanded: false,
-  });
-
-  const temperature = pane.addFolder({
-    title: "Temperature",
-    expanded: false,
-  });
-
-  const percepitation = pane.addFolder({
-    title: "Percepitation",
-    expanded: false,
-  });
-
-  // data prep
-  console.log("perceps", perceps);
-  // Pane
-  pane.addInput(PARAMS, "bg", {
-    view: "color",
-  });
-  shaders.addInput(PARAMS, "glassFilter"),
-    {
-      view: "checkbox",
-    };
-  pane.addInput(PARAMS, "movement"),
-    {
-      view: "checkbox",
-    };
-  pane.addInput(PARAMS, "Time", {
-    min: 0,
-    max: 23,
-    step: 1,
-  });
-  pane.addInput(PARAMS, "percepsColorAngle", {
-    min: 0,
-    max: 360,
-  });
-  shaders.addInput(PARAMS, "toggleTempBlur", {
-    view: "checkbox",
-  });
-  shaders.addInput(PARAMS, "togglePercepBlur", {
-    view: "checkbox",
-  });
-  shaders.addInput(PARAMS, "tempBlur", {
-    min: 0,
-    max: 50,
-  });
-  shaders.addInput(PARAMS, "percepBlur", {
-    min: 0,
-    max: 50,
-  });
-  shaders.addInput(PARAMS, "bands", {
-    min: 0,
-    max: 100,
-    step: 1,
-  });
-  shaders.addInput(PARAMS, "distortion", {
-    min: 0,
-    max: 10,
-  });
-  temperature.addInput(PARAMS, "angleStep", {
-    min: 0,
-    max: 0.5,
-  });
-  temperature.addInput(PARAMS, "lineThickness", {
-    min: 0,
-    max: 20,
-  });
-  temperature.addInput(PARAMS, "gap", {
-    min: 0,
-    max: 1,
-  });
-  percepitation.addInput(PARAMS, "circleSize", {
-    min: 0,
-    max: 10,
-  });
-  temperature.addInput(PARAMS, "tempRingSize", {
-    min: 0,
-    max: 8,
-  });
-  temperature.addInput(PARAMS, "tempRingInnerSize", {
-    min: 0,
-    max: 200,
-  });
-  pane.addInput(PARAMS, "showTemp", {
-    view: "checkbox",
-  });
-  pane.addInput(PARAMS, "showPerceps", {
-    view: "checkbox",
-  });
-  temperature.addInput(PARAMS, "tempRingPow", {
-    min: 0,
-    max: 3,
-  });
-  pane.addInput(PARAMS, "posX", {
-    min: -width / 2,
-    max: width / 2,
-  });
-  pane.addInput(PARAMS, "posY", {
-    min: -height / 2,
-    max: height / 2,
-  });
-  percepitation.addInput(PARAMS, "percepGap", {
-    min: 0.01,
-    max: 5,
-  });
-  percepitation.addInput(PARAMS, "percepsAngleStep", {
-    min: 0.001,
-    max: 0.4,
-  });
-  pane.addInput(PARAMS, "ringGap", {
-    min: 0,
-    max: 50,
-  });
+  setupDebugPanel();
 
   createCanvas(_Width, _Height);
 
@@ -273,6 +166,7 @@ function setup() {
     gl_FragColor = texture2D(tex0, coord);
   }
 `);
+
   const bgClr = color("#ffd500");
   bgClr.setAlpha(50);
   background(bgClr);
@@ -295,8 +189,13 @@ function setup() {
   image(noiseGra, 0, 0);
 
   tempGraphic = createGraphics(width, height);
-  humiGraphic = createGraphics(width, height);
+  tempGraphic1 = createGraphics(width, height);
+  tempGraphic2 = createGraphics(width, height);
+  tempGraphic3 = createGraphics(width, height);
   percepsGraphic = createGraphics(width, height);
+  percepsGraphic1 = createGraphics(width, height);
+  percepsGraphic2 = createGraphics(width, height);
+  percepsGraphic3 = createGraphics(width, height);
 }
 
 function draw() {
@@ -329,39 +228,61 @@ function draw() {
     yOffset += 0.0005 * motion;
   }
 
-  let xMovement = PARAMS.movement ? (noise(xOffset) - 0.5) * width : 0;
-  let yMovement = PARAMS.movement ? (noise(yOffset) - 0.5) * height : 0;
+  let xOffset1 = xOffset;
+  let yOffset1 = yOffset;
+  let xOffset2 = xOffset + 1000; // Add a large number to get different noise values
+  let yOffset2 = yOffset + 1000;
+  let xOffset3 = xOffset + 2000;
+  let yOffset3 = yOffset + 2000;
+
+  let xMovement1 = PARAMS.movement ? (noise(xOffset1) - 0.5) * width : 0;
+  let yMovement1 = PARAMS.movement ? (noise(yOffset1) - 0.5) * height : 0;
+
+  let xMovement2 = PARAMS.movement ? (noise(xOffset2) - 0.5) * width : 0;
+  let yMovement2 = PARAMS.movement ? (noise(yOffset2) - 0.5) * height : 0;
+
+  let xMovement3 = PARAMS.movement ? (noise(xOffset3) - 0.5) * width : 0;
+  let yMovement3 = PARAMS.movement ? (noise(yOffset3) - 0.5) * height : 0;
 
   // First climate ring
   push();
   drawClimateRing(
-    width / 2 + PARAMS.posX + xMovement,
-    height / 2 + PARAMS.posY + yMovement,
+    width / 1.4 + PARAMS.posX + xMovement1,
+    height / 2 + PARAMS.posY + yMovement1,
     240,
     28,
-    70
+    70,
+    tempGraphic1,
+    percepsGraphic1,
+    PARAMS.ringBlur1
   );
   pop();
 
   // Second climate ring
   push();
   drawClimateRing(
-    width / 3 + PARAMS.posX + xMovement * 0.8,
-    height / 3 + PARAMS.posY + yMovement * 0.8,
-    240,
+    width / 3 + PARAMS.posX + xMovement2 * 0.8,
+    height / 3 + PARAMS.posY + yMovement2 * 0.8,
+    200,
     28,
-    70
+    70,
+    tempGraphic2,
+    percepsGraphic2,
+    PARAMS.ringBlur2
   );
   pop();
 
   // Third climate ring
   push();
   drawClimateRing(
-    (2 * width) / 3 + PARAMS.posX + xMovement * 1.2,
-    (2 * height) / 3 + PARAMS.posY + yMovement * 1.2,
+    (2 * width) / 3 + PARAMS.posX + xMovement3 * 1.2,
+    (2 * height) / 3 + PARAMS.posY + yMovement3 * 1.2,
     240,
     28,
-    70
+    70,
+    tempGraphic3,
+    percepsGraphic3,
+    PARAMS.ringBlur3
   );
   pop();
 
@@ -414,7 +335,17 @@ function mapData(data, max) {
   return mappedData;
 }
 
-function drawClimateRing(cx, cy, radius, temperature, precipitation) {
+function drawClimateRing(
+  cx,
+  cy,
+  radius,
+  temperature,
+  precipitation,
+  tempGraphic,
+  percepsGraphic,
+  graphicBlur = 0,
+  tempRingSize
+) {
   let outerRadius = radius;
   let innerRadiusTemp = radius - PARAMS.tempRingInnerSize; // Adjusted to remove gap
 
@@ -432,7 +363,10 @@ function drawClimateRing(cx, cy, radius, temperature, precipitation) {
       -PI / 2,
       1.5 * PI,
       hotColor,
-      coldColor
+      coldColor,
+      tempGraphic,
+      graphicBlur,
+      tempRingSize
     );
   }
 
@@ -446,7 +380,10 @@ function drawClimateRing(cx, cy, radius, temperature, precipitation) {
       -PI / 2,
       1.5 * PI,
       hotColor,
-      coldColor
+      coldColor,
+      percepsGraphic,
+      graphicBlur,
+      tempRingSize
     );
   }
 }
@@ -459,7 +396,10 @@ function drawGradientRing(
   startAngle,
   endAngle,
   startColor,
-  endColor
+  endColor,
+  tempGraphic,
+  blur,
+  size
 ) {
   // Create a graphics buffer for the ring
   tempGraphic.clear();
@@ -518,7 +458,7 @@ function drawGradientRing(
   }
 
   if (PARAMS.toggleTempBlur) {
-    tempGraphic.filter(BLUR, PARAMS.tempBlur); // Apply blur effect
+    tempGraphic.filter(BLUR, blur); // Apply blur effect
   }
 
   // Draw the blurred ring onto the main canvas
@@ -533,7 +473,10 @@ function drawAlphaRing(
   startAngle,
   endAngle,
   startColor,
-  endColor
+  endColor,
+  percepsGraphic,
+  graphicBlur,
+  size
 ) {
   // Create a graphics buffer for the ring
   percepsGraphic.clear();
@@ -568,12 +511,9 @@ function drawAlphaRing(
       percepsGraphic.noStroke();
       percepsGraphic.circle(posX, posY, PARAMS.circleSize);
     }
-
-    //tempGraphic.line(x1, y1, x2, y2);
-    //let currentLength = dist(x1, y1, x2, y2);
   }
   if (PARAMS.togglePercepBlur) {
-    percepsGraphic.filter(BLUR, PARAMS.percepBlur); // Apply blur effect
+    percepsGraphic.filter(BLUR, graphicBlur); // Apply blur effect
   }
   // Draw the blurred ring onto the main canvas
   image(percepsGraphic, 0, 0);
@@ -635,4 +575,151 @@ const drawText = (textGraphic) => {
   textGraphic.pop();
 
   image(textGraphic, 0, 0);
+};
+
+const setupDebugPanel = () => {
+  const shaders = pane.addFolder({
+    title: "Shaders",
+    expanded: false,
+  });
+
+  const temperature = pane.addFolder({
+    title: "Temperature",
+    expanded: false,
+  });
+
+  const percepitation = pane.addFolder({
+    title: "Percepitation",
+    expanded: false,
+  });
+
+  const misc = pane.addFolder({
+    title: "Misc",
+    expanded: false,
+  });
+
+  // data prep
+  console.log("perceps", perceps);
+  // Pane
+  misc.addInput(PARAMS, "bg", {
+    view: "color",
+  });
+  shaders.addInput(PARAMS, "glassFilter"),
+    {
+      view: "checkbox",
+    };
+  misc.addInput(PARAMS, "movement"),
+    {
+      view: "checkbox",
+    };
+  misc.addInput(PARAMS, "Time", {
+    min: 0,
+    max: 23,
+    step: 1,
+  });
+  misc.addInput(PARAMS, "percepsColorAngle", {
+    min: 0,
+    max: 360,
+  });
+  shaders.addInput(PARAMS, "toggleTempBlur", {
+    view: "checkbox",
+  });
+  shaders.addInput(PARAMS, "togglePercepBlur", {
+    view: "checkbox",
+  });
+  shaders.addInput(PARAMS, "tempBlur", {
+    min: 0,
+    max: 50,
+  });
+  shaders.addInput(PARAMS, "ringBlur1", {
+    min: 0,
+    max: 20,
+  });
+  shaders.addInput(PARAMS, "ringBlur2", {
+    min: 0,
+    max: 20,
+  });
+  shaders.addInput(PARAMS, "ringBlur3", {
+    min: 0,
+    max: 20,
+  });
+  shaders.addInput(PARAMS, "percepBlur", {
+    min: 0,
+    max: 50,
+  });
+  shaders.addInput(PARAMS, "bands", {
+    min: 0,
+    max: 100,
+    step: 1,
+  });
+  shaders.addInput(PARAMS, "distortion", {
+    min: 0,
+    max: 10,
+  });
+  temperature.addInput(PARAMS, "angleStep", {
+    min: 0,
+    max: 0.5,
+  });
+  temperature.addInput(PARAMS, "lineThickness", {
+    min: 0,
+    max: 20,
+  });
+  temperature.addInput(PARAMS, "gap", {
+    min: 0,
+    max: 1,
+  });
+  percepitation.addInput(PARAMS, "circleSize", {
+    min: 0,
+    max: 10,
+  });
+  temperature.addInput(PARAMS, "tempRingSize", {
+    min: 0,
+    max: 8,
+  });
+  temperature.addInput(PARAMS, "tempRingSize1", {
+    min: 0,
+    max: 8,
+  });
+  temperature.addInput(PARAMS, "tempRingSize2", {
+    min: 0,
+    max: 8,
+  });
+  temperature.addInput(PARAMS, "tempRingSize3", {
+    min: 0,
+    max: 8,
+  });
+  temperature.addInput(PARAMS, "tempRingInnerSize", {
+    min: 0,
+    max: 200,
+  });
+  misc.addInput(PARAMS, "showTemp", {
+    view: "checkbox",
+  });
+  misc.addInput(PARAMS, "showPerceps", {
+    view: "checkbox",
+  });
+  temperature.addInput(PARAMS, "tempRingPow", {
+    min: 0,
+    max: 3,
+  });
+  misc.addInput(PARAMS, "posX", {
+    min: -width / 2,
+    max: width / 2,
+  });
+  misc.addInput(PARAMS, "posY", {
+    min: -height / 2,
+    max: height / 2,
+  });
+  percepitation.addInput(PARAMS, "percepGap", {
+    min: 0.01,
+    max: 5,
+  });
+  percepitation.addInput(PARAMS, "percepsAngleStep", {
+    min: 0.001,
+    max: 0.4,
+  });
+  misc.addInput(PARAMS, "ringGap", {
+    min: 0,
+    max: 50,
+  });
 };
