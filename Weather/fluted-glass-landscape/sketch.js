@@ -67,11 +67,17 @@ const PARAMS = {
   theme: "",
   toggleTempBlur: true,
   togglePercepBlur: true,
+  pos1X: 607,
+  pos1Y: 269,
+  pos2X: 373,
+  pos2Y: 161,
+  pos3X: 614,
+  pos3Y: 365,
   tempBlur: 0,
   percepBlur: 0,
   ringBlur1: 0,
   ringBlur2: 3.7,
-  ringBlur3: 1.3,
+  ringBlur3: 1.6,
   glassFilter: false,
   bands: 45,
   distortion: 1.5,
@@ -82,7 +88,7 @@ const PARAMS = {
   tempRingSize: 5,
   tempRingSize1: 5,
   tempRingSize2: 3.6,
-  tempRingSize3: 7,
+  tempRingSize3: 6,
   tempRingInnerSize: 136,
   showTemp: true,
   showPerceps: true,
@@ -247,42 +253,45 @@ function draw() {
   // First climate ring
   push();
   drawClimateRing(
-    width / 1.4 + PARAMS.posX + xMovement1,
-    height / 2 + PARAMS.posY + yMovement1,
+    PARAMS.pos1X + xMovement1,
+    PARAMS.pos1Y + yMovement1,
     240,
     28,
     70,
     tempGraphic1,
     percepsGraphic1,
-    PARAMS.ringBlur1
+    PARAMS.ringBlur1,
+    PARAMS.tempRingSize1
   );
   pop();
 
   // Second climate ring
   push();
   drawClimateRing(
-    width / 3 + PARAMS.posX + xMovement2 * 0.8,
-    height / 3 + PARAMS.posY + yMovement2 * 0.8,
+    PARAMS.pos2X + xMovement2 * 0.8,
+    PARAMS.pos2Y + yMovement2 * 0.8,
     200,
     28,
     70,
     tempGraphic2,
     percepsGraphic2,
-    PARAMS.ringBlur2
+    PARAMS.ringBlur2,
+    PARAMS.tempRingSize2
   );
   pop();
 
   // Third climate ring
   push();
   drawClimateRing(
-    (2 * width) / 3 + PARAMS.posX + xMovement3 * 1.2,
-    (2 * height) / 3 + PARAMS.posY + yMovement3 * 1.2,
+    PARAMS.pos3Y + xMovement3 * 1.2,
+    PARAMS.pos3Y + yMovement3 * 1.2,
     240,
     28,
     70,
     tempGraphic3,
     percepsGraphic3,
-    PARAMS.ringBlur3
+    PARAMS.ringBlur3,
+    PARAMS.tempRingSize3
   );
   pop();
 
@@ -434,10 +443,8 @@ function drawGradientRing(
     //let col = lerpColor(startColor, endColor, tempIndex);
     //tempGraphic.stroke(col);
 
-    let x1 =
-      cx + cos(angle) * PARAMS.tempRingSize * pow(tempItem, PARAMS.tempRingPow);
-    let y1 =
-      cy + sin(angle) * PARAMS.tempRingSize * pow(tempItem, PARAMS.tempRingPow);
+    let x1 = cx + cos(angle) * size * pow(tempItem, PARAMS.tempRingPow);
+    let y1 = cy + sin(angle) * size * pow(tempItem, PARAMS.tempRingPow);
     let x2 = cx + cos(angle) * innerRadius;
     let y2 = cy + sin(angle) * innerRadius;
 
@@ -721,5 +728,29 @@ const setupDebugPanel = () => {
   misc.addInput(PARAMS, "ringGap", {
     min: 0,
     max: 50,
+  });
+  misc.addInput(PARAMS, "pos1X", {
+    min: 0,
+    max: _Width,
+  });
+  misc.addInput(PARAMS, "pos1Y", {
+    min: 0,
+    max: _Height,
+  });
+  misc.addInput(PARAMS, "pos2X", {
+    min: 0,
+    max: _Width,
+  });
+  misc.addInput(PARAMS, "pos2Y", {
+    min: 0,
+    max: _Height,
+  });
+  misc.addInput(PARAMS, "pos3X", {
+    min: 0,
+    max: _Width,
+  });
+  misc.addInput(PARAMS, "pos3Y", {
+    min: 0,
+    max: _Height,
   });
 };
