@@ -37,6 +37,7 @@ html{
 canvas {
   display: block;
   position: absolute;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
 }
 
 main {
@@ -119,6 +120,7 @@ canvas{
 
 #checkbox-container {
   display:flex;
+  color:rgb(0, 27, 200);
   align-items: center;
   gap: 4px;
   position: absolute;
@@ -133,7 +135,7 @@ input[type="checkbox"] {
   -webkit-appearance: none;
   font-size: 2rem;
   padding: 0.25rem;
-  border: 2px solid rgb(0, 27, 200);;
+  border: 2px solid rgb(0, 27, 200);
 }
 
 
