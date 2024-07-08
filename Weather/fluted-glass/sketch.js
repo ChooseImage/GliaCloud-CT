@@ -89,7 +89,7 @@ let forecast = [21, 25, 0.7]; // time, temp, humidity;
 const sunlighColor = ["#1B0034", "e0c31d"]; // sunny, cloudy
 let tempColor;
 const temp = [
-  23, 23, 22, 22.6, 22, 22, 23, 23, 23, 24, 25, 26, 26, 26, 26, 26, 26, 26, 25,
+  23, 23, 22, 17.6, 22, 22, 23, 23, 23, 24, 25, 26, 26, 26, 26, 26, 26, 26, 25,
   24, 23.08, 23, 23.1, 23,
 ];
 
@@ -110,7 +110,7 @@ const weatherData = [];
 let ys = [];
 let amount = 30;
 let noiseGra;
-const [_Width, _Height] = [480, 860];
+const [_Width, _Height] = [800, 800];
 let fontMono, fontSerif, abcOracleLight, abcOracleGreek;
 let date = new Date();
 let formattedTime =
@@ -338,7 +338,7 @@ function draw() {
     filter(glassShader);
   }
 
-  drawText(textGraphic);
+  //drawText(textGraphic);
 }
 
 function drawSun(x, y, size) {
@@ -561,17 +561,19 @@ function gradientLine(
 ) {
   const ctx = graphic.drawingContext;
   const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-
+  const white = "#ffffff";
   // Calculate the proportion of the current line length to the total length
   const proportion = currentLength / totalLength;
 
-  gradient.addColorStop(0, color1.toString());
-  gradient.addColorStop(proportion, color2.toString());
+  //const endColor = lerpColor(color1, color2, proportion);
+  let targetColor = lerpColor(color(color2), color(color1), proportion);
+  gradient.addColorStop(0, targetColor.toString());
+  gradient.addColorStop(1, color2.toString());
 
   ctx.strokeStyle = gradient;
   ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x1, y1);
   ctx.stroke();
 }
 
