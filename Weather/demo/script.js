@@ -3,7 +3,6 @@ function Marquee(selector, speed) {
   const clone = parentSelector.innerHTML;
   const firstElement = parentSelector.children[0];
   let i = 0;
-  console.log(firstElement);
   parentSelector.insertAdjacentHTML("beforeend", clone);
   parentSelector.insertAdjacentHTML("beforeend", clone);
 
@@ -16,7 +15,4 @@ function Marquee(selector, speed) {
   }, 0);
 }
 
-//after window is completed load
-//1 class selector for marquee
-//2 marquee speed 0.2
 window.addEventListener("load", Marquee(".marquee", 0.2));

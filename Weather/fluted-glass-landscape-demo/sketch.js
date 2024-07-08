@@ -13,7 +13,7 @@ let percepsGraphic1, percepsGraphic2, percepsGraphic3;
 
 let textGraphic;
 let xOffset = 0;
-let yOffset = 10000; // Start at a different value to get different noise
+let yOffset = 10000;
 // glass
 let font;
 let glassShader;
