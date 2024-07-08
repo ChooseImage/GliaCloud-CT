@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var i = 0;
   var typeText = "With a 30% chance of light rain after 8 PM";
   var introText =
-    "18ºc ~ 29ºc with gusty winds throughout the day, partly cloudy skies turning overcast by evening. Expect a high UV index, humidity levels will be moderate, making it feel slightly warmer than the actual temperature.";
+    "18ºc ~ 29ºc with gusty winds throughout the day, partly cloudy skies turning overcast by evening. Expect a high UV index.";
   var percepText = "With a 23% chance of rain.";
   var speed = 50;
 

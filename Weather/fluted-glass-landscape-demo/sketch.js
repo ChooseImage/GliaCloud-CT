@@ -23,6 +23,8 @@ let txtColor = "#000000";
 let bands = 45;
 let distortion = 1.5;
 
+let hotColor, coldColor, hotColor1, coldColor1;
+
 function requestJsonData() {
   fetch(apiUrl)
     .then((response) => response.json())
@@ -64,7 +66,7 @@ const pane = new Tweakpane.Pane();
 const PARAMS = {
   Time: 0,
   movement: true,
-  bg: "#ffffff",
+  bg: "#FFF5F5",
   percepsColorAngle: 50,
   theme: "",
   toggleTempBlur: true,
@@ -80,9 +82,9 @@ const PARAMS = {
   ringBlur1: 0,
   ringBlur2: 3.7,
   ringBlur3: 1.74,
-  glassFilter: false,
-  bands: 45,
-  distortion: 1.5,
+  glassFilter: true,
+  bands: 86,
+  distortion: 4.42,
   angleStep: 0.03,
   lineThickness: 0.87,
   gap: 0.16,
@@ -155,6 +157,12 @@ async function setup() {
 
   textGraphic = createGraphics(_Width, _Height);
   setupDebugPanel();
+
+  // Temperature gradient colors
+  coldColor = color("#BCD9D7"); // blueish teal
+  hotColor = color("#FBAD6F"); // red-orange
+  coldColor1 = color("#C2E0F8");
+  hotColor1 = color("#FF817A");
 
   createCanvas(_Width, _Height);
 
@@ -263,7 +271,9 @@ function draw() {
     tempGraphic1,
     percepsGraphic1,
     PARAMS.ringBlur1,
-    PARAMS.tempRingSize1
+    PARAMS.tempRingSize1,
+    hotColor,
+    coldColor
   );
   pop();
 
@@ -278,7 +288,9 @@ function draw() {
     tempGraphic2,
     percepsGraphic2,
     PARAMS.ringBlur2,
-    PARAMS.tempRingSize2
+    PARAMS.tempRingSize2,
+    hotColor1,
+    coldColor1
   );
   pop();
 
@@ -293,7 +305,9 @@ function draw() {
     tempGraphic3,
     percepsGraphic3,
     PARAMS.ringBlur3,
-    PARAMS.tempRingSize3
+    PARAMS.tempRingSize3,
+    hotColor1,
+    coldColor1
   );
   pop();
 
@@ -355,14 +369,12 @@ function drawClimateRing(
   tempGraphic,
   percepsGraphic,
   graphicBlur = 0,
-  tempRingSize
+  tempRingSize,
+  colorHot,
+  colorCold
 ) {
   let outerRadius = radius;
   let innerRadiusTemp = radius - PARAMS.tempRingInnerSize; // Adjusted to remove gap
-
-  // Temperature gradient colors
-  let coldColor = color("#BCD9D7"); // blueish teal
-  let hotColor = color("#FBAD6F"); // red-orange
 
   // Draw temperature ring
   if (PARAMS.showTemp) {
@@ -373,8 +385,8 @@ function drawClimateRing(
       innerRadiusTemp,
       -PI / 2,
       1.5 * PI,
-      hotColor,
-      coldColor,
+      colorHot,
+      colorCold,
       tempGraphic,
       graphicBlur,
       tempRingSize
