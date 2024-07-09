@@ -1,7 +1,7 @@
 const apiUrl =
   "https://data3p-al23s7k26q-de.a.run.app/weather/current?area=taipei";
 let dataLoaded = false;
-
+let cloudIcon;
 let currentWeather;
 let fadeLength = 100;
 let f = 0;
@@ -146,6 +146,7 @@ function preload() {
   font = loadFont(
     "https://fonts.gstatic.com/s/prompt/v10/-W_6XJnvUD7dzB2KZeKka2MrUZEtdzow.ttf"
   );
+  cloudIcon = loadImage("./assets/imgs/cloudicon.png");
   requestJsonData();
 }
 
@@ -316,8 +317,8 @@ function draw() {
   }
 
   drawText(textGraphic);
+  //image(cloudIcon, 500, 270, 90, 56);
 }
-
 function drawSun(x, y, size) {
   push();
   translate(x, y);
