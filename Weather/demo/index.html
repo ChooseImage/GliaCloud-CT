@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
     <title>weather-demo</title>
 </head>
 <body>
@@ -16,16 +17,64 @@
     <div class="main">
         <div class="demo">
             <iframe src="../fluted-glass-landscape-demo/index.html" frameborder="0"></iframe> 
+            <div id="controls">
+                <div class="collapsible">
+                    <h3 class="collapsible-header">
+                        Controls <span class="toggle-icon">+</span>
+                    </h3>
+                    <div class="collapsible-content">
+                        <div id="controls-container">
+                            <div class="control-unit">
+                                <h5>Effects:</h5>
+                                <ul>
+                                    <li>glassFilter: Apply sliced glass effect</li>
+                                    <li>toggleBlur: Enable Blur effect</li>
+                                    <li>ringBlur1,2,3: Amount of the blur effects</li>
+                                    <li>bands: Amount of the sliced pieces of glass effect</li>
+                                    <li>distortion: Degree of distortion of glass effect</li>
+                                </ul>
+                            </div>
+                            <div class="control-unit">
+                                <h5>Temperature (Outer-Ring):</h5>
+                                <ul>
+                                    <li>angleStep: Density of the temperature lines</li>
+                                    <li>lineThickness: Thickness of temperature lines</li>
+                                    <li>gap: Fine Tune for the gap between lines</li>
+                                    <li>tempRingSize1,2,3: Size of the rings</li>
+                                    <li>tempRingInnerSize: Size of inner part of all the rings</li>
+                                    <li>tempRingPow: Degree of how drastic the size of the rings are</li>
+                                </ul>
+                            </div>
+                            <div class="control-unit">
+                                <h5>Precipitation (Inner-Ring):</h5>
+                                <ul>
+                                    <li>circleSize: Size of the blue circles</li>
+                                    <li>percepGap: Size of the Gap in-between each row of circles</li>
+                                    <li>perecepsAngleStep: Density of the circles</li>
+                                </ul>
+                            </div>
+                            <div class="control-unit">
+                                <h5>Position / Movement</h5>
+                                <ul>
+                                    <li>movement: Enable ring movements</li>
+                                    <li>ringGap: gap between precipitation ring and temperature ring</li>
+                                    <li>pos[1,2,3][X,Y]: position for each ring along X,Y axes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="anatomy">
                 <h3>Anatomy</h3>
                 <img src="./assets/anatomy.png" alt="anatomy">
             </div>
-
         </div>
         <div class="prototypes">
             <img src="./assets/pt-03.png" alt="prototype-03">
             <img src="./assets/pt-04.png" alt="prototype-04">
             <img src="./assets/pt-02.png" alt="prototype-02">
+            <img src="./assets/tax-por.jpg" alt="ring taxonomy">
             <img src="./assets/pt-01.png" alt="prototype-01">
             <img src="./assets/pt-05.png" alt="prototype-05">
         </div>
@@ -37,6 +86,5 @@
             <a href="https://github.com/ChooseImage/GliaCloud-CT/blob/main/Weather/fluted-glass-landscape-demo">REPO<span>&#8599;</span></a>
         </div>
     </div>
-    <script src="script.js" defer></script>
 </body>
 </html>

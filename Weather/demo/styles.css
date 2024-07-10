@@ -4,6 +4,15 @@
     box-sizing: border-box;
 }
 
+ul{
+    padding: 0;
+    padding-left: 10px;
+}
+
+li{
+    padding-bottom: 5px;
+}
+
 body{
     margin:0;
     font-family: 'Roboto', sans-serif;
@@ -130,3 +139,63 @@ iframe{
     text-decoration: underline;
 }
   
+#controls {
+    font-size: 0.45rem;
+    font-family: monospace;
+    border-top: 4px solid rgb(0, 27, 200);
+    color:rgba(0, 27, 200, 70);
+    width: 100%;
+    display:flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  #controls-container {
+    gap: 15px;
+    display: flex;
+    flex:1;
+    padding: 0;
+    padding-right:20px;
+  }
+  
+  #controls h3 {
+    margin: 0 0 0 10px;
+    width:20%;
+    color:rgb(0, 27, 200);
+    
+  }
+
+  .collapsible-header {
+    cursor: pointer;
+    padding: 10px;
+  }
+  
+  .collapsible-content {
+    display: none;
+    padding:0;
+    padding-left: 30px;
+  }
+  
+  .active .collapsible-content {
+    display: block;
+  }
+
+  
+  .collapsible-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toggle-icon {
+    font-size: 1.2em; /* Adjust as needed */
+}
+
+.collapsible-content {
+    display: none;
+}
+
+.collapsible.active .collapsible-content {
+    display: block;
+}

@@ -60,6 +60,8 @@ const PARAMS = {
   Time: 0,
   movement: false,
   bg: "#fff5f5",
+  colorCold: "#BCD9D7",
+  colorHot: "#FBAD6F",
   percepsColorAngle: 50,
   theme: "",
   toggleTempBlur: false,
@@ -110,7 +112,7 @@ const weatherData = [];
 let ys = [];
 let amount = 30;
 let noiseGra;
-const [_Width, _Height] = [800, 800];
+const [_Width, _Height] = [500, 500];
 let fontMono, fontSerif, abcOracleLight, abcOracleGreek;
 let date = new Date();
 let formattedTime =
@@ -253,6 +255,8 @@ function setup() {
     min: 0,
     max: 50,
   });
+  pane.addInput(PARAMS, "colorHot");
+  pane.addInput(PARAMS, "colorCold");
 
   createCanvas(_Width, _Height);
 
@@ -338,6 +342,10 @@ function draw() {
     filter(glassShader);
   }
 
+  if (key === "s" || key === "S") {
+    saveCanvas("myCanvas", "jpg");
+  }
+
   //drawText(textGraphic);
 }
 
@@ -388,8 +396,8 @@ function drawClimateRing(cx, cy, radius, temperature, precipitation) {
   let innerRadiusTemp = radius - PARAMS.tempRingInnerSize; // Adjusted to remove gap
 
   // Temperature gradient colors
-  let coldColor = color("#BCD9D7"); // blueish teal
-  let hotColor = color("#FBAD6F"); // red-orange
+  let coldColor = color(PARAMS.colorCold); // blueish teal
+  let hotColor = color(PARAMS.colorHot); // red-orange
 
   // Draw temperature ring
   if (PARAMS.showTemp) {
