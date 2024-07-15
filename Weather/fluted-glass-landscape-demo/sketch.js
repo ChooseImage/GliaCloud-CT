@@ -99,6 +99,8 @@ const PARAMS = {
   percepGap: 0.1,
   percepsAngleStep: 0.07,
   ringGap: 16,
+  clockSize: 140,
+  clockFade: 1,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -152,7 +154,7 @@ async function setup() {
   // Temperature gradient colors
   coldColor = color("#BCD9D7"); // blueish teal
   hotColor = color("#ff5050"); // red-orange
-  coldColor1 = color("#C2E0F8");
+  coldColor1 = color(242, 154, 154, 0);
   hotColor1 = color("#FF817A");
   //coldColor = color(188, 217, 215, 0);
 
@@ -234,6 +236,21 @@ function draw() {
   let xMovement3 = PARAMS.movement ? (noise(xOffset3) - 0.5) * width : 0;
   let yMovement3 = PARAMS.movement ? (noise(yOffset3) - 0.5) * height : 0;
 
+  conicCircle(
+    PARAMS.pos1X + xMovement1,
+    PARAMS.pos1Y + yMovement1,
+    240,
+    [hotColor, coldColor1],
+    PI
+  );
+
+  ellipse(
+    PARAMS.pos1X + xMovement1,
+    PARAMS.pos1Y + yMovement1,
+    PARAMS.clockSize,
+    PARAMS.clockSize
+  );
+
   // First climate ring
   push();
   drawClimateRing(
@@ -252,21 +269,6 @@ function draw() {
   if (PARAMS.glassFilter) {
     filter(glassShader);
   }
-  setGradation();
-
-  conicGradient(
-    0,
-    width / 2,
-    height / 2, //Start angle, pX, pY
-    [
-      color(190, 100, 100, 100),
-      color(100, 100, 100, 100),
-      color(10, 100, 100, 100),
-      color(280, 100, 100, 100),
-    ]
-  );
-  ellipse(width / 2, height / 2, 400, 400);
-  shadow();
   // drawText(textGraphic);
   //image(cloudIcon, 500, 270, 90, 56);
 }
@@ -490,16 +492,16 @@ function drawClock(x, y) {
   let hFrom = map(hour() % 12, 0, 11, 0, TWO_PI) - HALF_PI;
   let hTo = map((hour() + 1) % 12, 0, 11, 0, TWO_PI) - HALF_PI;
 
-  strokeWeight(2);
-  stroke(255);
-  noFill();
-  ellipse(0, 0, 100, 100);
-  stroke(255, 0, 0);
-  line(0, 0, cos(s) * 50, sin(s) * 50);
-  stroke(0, 255, 0);
-  line(0, 0, cos(m) * 40, sin(m) * 40);
-  stroke(0, 0, 255);
-  line(0, 0, cos(h) * 30, sin(h) * 30);
+  // strokeWeight(2);
+  // stroke(255);
+  // noFill();
+  // ellipse(0, 0, 100, 100);
+  // stroke(255, 0, 0);
+  // line(0, 0, cos(s) * 50, sin(s) * 50);
+  // stroke(0, 255, 0);
+  // line(0, 0, cos(m) * 40, sin(m) * 40);
+  // stroke(0, 0, 255);
+  // line(0, 0, cos(h) * 30, sin(h) * 30);
   pop();
 }
 
@@ -789,6 +791,14 @@ const setupDebugPanel = () => {
     min: 0,
     max: _Height,
   });
+  misc.addInput(PARAMS, "clockSize", {
+    min: 0,
+    max: 400,
+  });
+  misc.addInput(PARAMS, "clockFade", {
+    min: 0,
+    max: 1,
+  });
 };
 
 class Easing {
@@ -990,7 +1000,7 @@ const precipitation1 = [
 
 //}
 
-function setGradation() {
+function conicCircle(x, y, r, colors, angle) {
   const ctx = drawingContext;
 
   // Start angle for the gradient
@@ -1010,18 +1020,30 @@ function setGradation() {
   }
 
   // Create a conic gradient
-  const gradient = ctx.createConicGradient(startAngle, width / 2, height / 2);
-  gradient.addColorStop(0, "red");
-  gradient.addColorStop(0.25, "orange");
-  gradient.addColorStop(0.5, "yellow");
-  gradient.addColorStop(0.75, "green");
-  gradient.addColorStop(1, "blue");
+  const gradient = ctx.createConicGradient(startAngle, x, y);
+
+  // Ease-out-circ
+  function easeOutCirc(x) {
+    return Math.sqrt(1 - Math.pow(x - 1, 2));
+  }
+
+  // Number of steps for smoother gradient
+  const steps = 100;
+
+  // Add color stops with easing
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const easedT = easeOutCirc(t);
+    const color1 = lerpColor(color(colors[0]), color(PARAMS.bg), easedT);
+    gradient.addColorStop(t * PARAMS.clockFade, color1.toString());
+  }
 
   // Set the fill style to the gradient
   ctx.fillStyle = gradient;
 
   // Fill the canvas with the gradient
-  ctx.fillRect(0, 0, width, height);
+  // You can uncomment and adjust this part if needed
+  // ctx.ellipse(x, y, r, r, 0, -PI / 2, 1.5 * PI);
 }
 
 function conicGradient(sA, sX, sY, colors) {
