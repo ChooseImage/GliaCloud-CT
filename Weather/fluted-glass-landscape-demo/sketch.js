@@ -645,7 +645,7 @@ const setupDebugPanel = () => {
   });
   shaders.addInput(PARAMS, "bands", {
     min: 0,
-    max: 100,
+    max: 500,
     step: 1,
   });
   shaders.addInput(PARAMS, "distortion", {

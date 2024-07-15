@@ -158,10 +158,10 @@ async function setup() {
   hotColor = color("#ff5050"); // red-orange
   coldColor1 = color(242, 154, 154, 0);
   hotColor1 = color("#FF817A");
-  hourColor = color("#947EB0");
-  minuteColor = color("#D0BFE7");
-  hourColor = color(180);
-  minuteColor = color(210);
+  hourColor = color(148, 126, 176, 72);
+  minuteColor = color(148, 126, 176, 72);
+  //hourColor = color(180, 70);
+  //minuteColor = color(210);
   //coldColor = color(188, 217, 215, 0);
 
   PARAMS.minute = minute();
@@ -683,7 +683,7 @@ const setupDebugPanel = () => {
   });
   shaders.addInput(PARAMS, "bands", {
     min: 0,
-    max: 100,
+    max: 600,
     step: 1,
   });
   shaders.addInput(PARAMS, "distortion", {
@@ -767,12 +767,12 @@ const setupDebugPanel = () => {
     max: 400,
   });
   misc.addInput(PARAMS, "clockFade", {
-    min: 0,
+    min: 0.0001,
     max: 1,
   });
   misc.addInput(PARAMS, "minute", {
     min: 0,
-    max: 59,
+    max: 60,
   });
 };
 
@@ -1003,16 +1003,16 @@ function conicCircle(x, y, r, colors, angle) {
   }
 
   const steps = 100;
-
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
     const easedT = easeOutCirc(t);
-    const color1 = lerpColor(color(colors[0]), color(PARAMS.bg), easedT);
-    gradient.addColorStop(t * PARAMS.clockFade, color1.toString());
+    const color1 = lerpColor(color(colors[0]), color(148, 126, 176, 0), easedT);
+    gradient.addColorStop(1 - t * PARAMS.clockFade, color1.toString());
   }
 
   // gradient.addColorStop(1, colors[0]);
   // gradient.addColorStop(0, color(PARAMS.bg));
   ctx.fillStyle = gradient;
   ellipse(x, y, r, r);
+  blendMode(BLEND);
 }
