@@ -160,7 +160,11 @@ async function setup() {
   hotColor1 = color("#FF817A");
   hourColor = color("#947EB0");
   minuteColor = color("#D0BFE7");
+  hourColor = color(180);
+  minuteColor = color(210);
   //coldColor = color(188, 217, 215, 0);
+
+  PARAMS.minute = minute();
 
   createCanvas(_Width, _Height);
 
@@ -464,7 +468,7 @@ function drawClock(x, y) {
   let s = map(second(), 0, 60, 0, TWO_PI) - HALF_PI;
   let m = map(PARAMS.minute, 0, 60, 0, TWO_PI) - HALF_PI;
   let h =
-    map(6, 0, 12, 0, TWO_PI) -
+    map(hour(), 0, 12, 0, TWO_PI) -
     HALF_PI +
     map(PARAMS.minute, 0, 60, 0, TWO_PI) / 12;
 
@@ -1000,15 +1004,15 @@ function conicCircle(x, y, r, colors, angle) {
 
   const steps = 100;
 
-  // for (let i = 0; i <= steps; i++) {
-  //   const t = i / steps;
-  //   const easedT = easeOutCirc(t);
-  //   const color1 = lerpColor(color(colors[0]), color(PARAMS.bg), easedT);
-  //   gradient.addColorStop(t * PARAMS.clockFade, color1.toString());
-  // }
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const easedT = easeOutCirc(t);
+    const color1 = lerpColor(color(colors[0]), color(PARAMS.bg), easedT);
+    gradient.addColorStop(t * PARAMS.clockFade, color1.toString());
+  }
 
-  gradient.addColorStop(1, colors[0]);
-  gradient.addColorStop(0, color(PARAMS.bg));
+  // gradient.addColorStop(1, colors[0]);
+  // gradient.addColorStop(0, color(PARAMS.bg));
   ctx.fillStyle = gradient;
   ellipse(x, y, r, r);
 }
