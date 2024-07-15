@@ -189,8 +189,6 @@ async function setup() {
   percepsGraphic2 = createGraphics(width, height);
   percepsGraphic3 = createGraphics(width, height);
   clockGraphic = createGraphics(width, height);
-  setGradation();
-  ellipse(100, 100, 100, 100);
 }
 
 function draw() {
@@ -255,7 +253,20 @@ function draw() {
     filter(glassShader);
   }
   setGradation();
-  ellipse(100, 100, 100, 100);
+
+  conicGradient(
+    0,
+    width / 2,
+    height / 2, //Start angle, pX, pY
+    [
+      color(190, 100, 100, 100),
+      color(100, 100, 100, 100),
+      color(10, 100, 100, 100),
+      color(280, 100, 100, 100),
+    ]
+  );
+  ellipse(width / 2, height / 2, 400, 400);
+  shadow();
   // drawText(textGraphic);
   //image(cloudIcon, 500, 270, 90, 56);
 }
@@ -1011,4 +1022,23 @@ function setGradation() {
 
   // Fill the canvas with the gradient
   ctx.fillRect(0, 0, width, height);
+}
+
+function conicGradient(sA, sX, sY, colors) {
+  let ctx = drawingContext;
+  let gradient = ctx.createConicGradient(sA, sX, sY);
+  gradient.addColorStop(0, colors[0]);
+  gradient.addColorStop(0.25, colors[1]);
+  gradient.addColorStop(0.5, colors[2]);
+  gradient.addColorStop(0.75, colors[3]);
+  gradient.addColorStop(1, colors[0]);
+
+  ctx.strokeStyle = gradient;
+}
+
+function shadow() {
+  drawingContext.shadowOffsetX = 10;
+  drawingContext.shadowOffsetY = 10;
+  drawingContext.shadowBlur = 16;
+  drawingContext.shadowColor = color(230, 30, 18, 100);
 }
