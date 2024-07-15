@@ -10,6 +10,7 @@ let tempGraphic, clockGraphic;
 let condition;
 let tempGraphic1, tempGraphic2, tempGraphic3;
 let percepsGraphic1, percepsGraphic2, percepsGraphic3;
+let hourColor, minuteColor, secondColor;
 
 const _Range = 11;
 
@@ -99,7 +100,7 @@ const PARAMS = {
   percepGap: 0.1,
   percepsAngleStep: 0.07,
   ringGap: 16,
-  clockSize: 140,
+  clockSize: 100,
   clockFade: 1,
 };
 var cloud;
@@ -156,6 +157,8 @@ async function setup() {
   hotColor = color("#ff5050"); // red-orange
   coldColor1 = color(242, 154, 154, 0);
   hotColor1 = color("#FF817A");
+  hourColor = color("#947EB0");
+  minuteColor = color("#D0BFE7");
   //coldColor = color(188, 217, 215, 0);
 
   createCanvas(_Width, _Height);
@@ -236,20 +239,7 @@ function draw() {
   let xMovement3 = PARAMS.movement ? (noise(xOffset3) - 0.5) * width : 0;
   let yMovement3 = PARAMS.movement ? (noise(yOffset3) - 0.5) * height : 0;
 
-  conicCircle(
-    PARAMS.pos1X + xMovement1,
-    PARAMS.pos1Y + yMovement1,
-    240,
-    [hotColor, coldColor1],
-    PI
-  );
-
-  ellipse(
-    PARAMS.pos1X + xMovement1,
-    PARAMS.pos1Y + yMovement1,
-    PARAMS.clockSize,
-    PARAMS.clockSize
-  );
+  drawClock(PARAMS.pos1X + xMovement1, PARAMS.pos1Y + yMovement1);
 
   // First climate ring
   push();
@@ -329,8 +319,6 @@ function drawClimateRing(
     graphicBlur,
     tempRingSize
   );
-
-  drawClock();
 }
 
 function drawGradientRing(
@@ -472,37 +460,17 @@ function drawAlphaRing(
 }
 
 function drawClock(x, y) {
-  push();
-  angleMode(DEGREES);
-  colorMode(HSB, 360, 100, 100, 100);
-  noFill();
-  strokeWeight(50);
-  //setGradation();
-  ellipse(x, y, 400, 400);
-  shadow();
-
-  angleMode(RADIANS);
-  translate(700, 200);
-  let s = map(second(), 0, 60, 0, TWO_PI) - HALF_PI;
-  let m = map(minute(), 0, 60, 0, TWO_PI) - HALF_PI;
+  let s = map(second(), 0, 59, 0, TWO_PI) - HALF_PI;
+  let m = map(minute(), 0, 59, 0, TWO_PI) - HALF_PI;
   let h =
     map(hour() % 12, 0, 11, 0, TWO_PI) -
     HALF_PI +
-    map(minute(), 0, 60, 0, TWO_PI) / 12;
+    map(minute(), 0, 59, -PI / 2, 1.5 * PI) / 12;
   let hFrom = map(hour() % 12, 0, 11, 0, TWO_PI) - HALF_PI;
   let hTo = map((hour() + 1) % 12, 0, 11, 0, TWO_PI) - HALF_PI;
 
-  // strokeWeight(2);
-  // stroke(255);
-  // noFill();
-  // ellipse(0, 0, 100, 100);
-  // stroke(255, 0, 0);
-  // line(0, 0, cos(s) * 50, sin(s) * 50);
-  // stroke(0, 255, 0);
-  // line(0, 0, cos(m) * 40, sin(m) * 40);
-  // stroke(0, 0, 255);
-  // line(0, 0, cos(h) * 30, sin(h) * 30);
-  pop();
+  conicCircle(x, y, PARAMS.clockSize + 30, [minuteColor, coldColor], m);
+  conicCircle(x, y, PARAMS.clockSize, [hourColor, coldColor], h);
 }
 
 function drawUnit(
@@ -1013,54 +981,31 @@ function conicCircle(x, y, r, colors, angle) {
         (elm) => elm.brand.includes("Firefox") || elm.brand.includes("Safari")
       )
     ) {
-      startAngle = HALF_PI;
+      startAngle = angle;
     }
   } catch (e) {
-    startAngle = HALF_PI;
+    console.error(e);
+    startAngle = angle;
   }
 
   // Create a conic gradient
-  const gradient = ctx.createConicGradient(startAngle, x, y);
+  const gradient = ctx.createConicGradient(angle, x, y);
 
-  // Ease-out-circ
   function easeOutCirc(x) {
     return Math.sqrt(1 - Math.pow(x - 1, 2));
   }
 
-  // Number of steps for smoother gradient
   const steps = 100;
 
-  // Add color stops with easing
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const easedT = easeOutCirc(t);
-    const color1 = lerpColor(color(colors[0]), color(PARAMS.bg), easedT);
-    gradient.addColorStop(t * PARAMS.clockFade, color1.toString());
-  }
+  // for (let i = 0; i <= steps; i++) {
+  //   const t = i / steps;
+  //   const easedT = easeOutCirc(t);
+  //   const color1 = lerpColor(color(colors[0]), color(PARAMS.bg), easedT);
+  //   gradient.addColorStop(t * PARAMS.clockFade, color1.toString());
+  // }
 
-  // Set the fill style to the gradient
-  ctx.fillStyle = gradient;
-
-  // Fill the canvas with the gradient
-  // You can uncomment and adjust this part if needed
-  // ctx.ellipse(x, y, r, r, 0, -PI / 2, 1.5 * PI);
-}
-
-function conicGradient(sA, sX, sY, colors) {
-  let ctx = drawingContext;
-  let gradient = ctx.createConicGradient(sA, sX, sY);
-  gradient.addColorStop(0, colors[0]);
-  gradient.addColorStop(0.25, colors[1]);
-  gradient.addColorStop(0.5, colors[2]);
-  gradient.addColorStop(0.75, colors[3]);
   gradient.addColorStop(1, colors[0]);
-
-  ctx.strokeStyle = gradient;
-}
-
-function shadow() {
-  drawingContext.shadowOffsetX = 10;
-  drawingContext.shadowOffsetY = 10;
-  drawingContext.shadowBlur = 16;
-  drawingContext.shadowColor = color(230, 30, 18, 100);
+  gradient.addColorStop(0, color(PARAMS.bg));
+  ctx.fillStyle = gradient;
+  ellipse(x, y, r, r);
 }
