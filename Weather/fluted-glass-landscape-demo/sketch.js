@@ -102,6 +102,7 @@ const PARAMS = {
   ringGap: 16,
   clockSize: 100,
   clockFade: 1,
+  minute: 0,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -115,7 +116,7 @@ temp = temp.splice(12, 23);
 
 let perceps = [
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0.01, 0.03, 0.07, 0.07, 0.11, 0.44, 0.44,
-  0.51, 0, 0, 0, 1, 0,
+  0.51, 0, 0, 0, 0, 0,
 ];
 console.log(perceps.length);
 perceps = perceps.splice(12, 23);
@@ -460,14 +461,12 @@ function drawAlphaRing(
 }
 
 function drawClock(x, y) {
-  let s = map(second(), 0, 59, 0, TWO_PI) - HALF_PI;
-  let m = map(minute(), 0, 59, 0, TWO_PI) - HALF_PI;
+  let s = map(second(), 0, 60, 0, TWO_PI) - HALF_PI;
+  let m = map(PARAMS.minute, 0, 60, 0, TWO_PI) - HALF_PI;
   let h =
-    map(hour() % 12, 0, 11, 0, TWO_PI) -
+    map(6, 0, 12, 0, TWO_PI) -
     HALF_PI +
-    map(minute(), 0, 59, -PI / 2, 1.5 * PI) / 12;
-  let hFrom = map(hour() % 12, 0, 11, 0, TWO_PI) - HALF_PI;
-  let hTo = map((hour() + 1) % 12, 0, 11, 0, TWO_PI) - HALF_PI;
+    map(PARAMS.minute, 0, 60, 0, TWO_PI) / 12;
 
   conicCircle(x, y, PARAMS.clockSize + 30, [minuteColor, coldColor], m);
   conicCircle(x, y, PARAMS.clockSize, [hourColor, coldColor], h);
@@ -766,6 +765,10 @@ const setupDebugPanel = () => {
   misc.addInput(PARAMS, "clockFade", {
     min: 0,
     max: 1,
+  });
+  misc.addInput(PARAMS, "minute", {
+    min: 0,
+    max: 59,
   });
 };
 
