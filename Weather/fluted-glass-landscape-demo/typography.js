@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   hideOverlayCheckbox.addEventListener("change", toggleOverlay);
-
+  toggleOverlay();
   // Always call typeWriter, regardless of checkbox state
   typeWriter();
 });
