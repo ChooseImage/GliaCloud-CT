@@ -6,13 +6,10 @@ let currentWeather;
 let fadeLength = 100;
 let f = 0;
 let currentTemp;
-let tempGraphic, clockGraphic;
+let tempGraphic;
 let condition;
 let tempGraphic1, tempGraphic2, tempGraphic3;
 let percepsGraphic1, percepsGraphic2, percepsGraphic3;
-let hourColor, minuteColor, secondColor;
-
-const _Range = 11;
 
 let textGraphic;
 let xOffset = 0;
@@ -64,19 +61,17 @@ function loadData(data) {
 }
 
 let mappedTemps, mappedPerceps, mappedWind, mappedHumidity;
-const [_Width, _Height] = [860, 480];
 
 const pane = new Tweakpane.Pane();
 const PARAMS = {
-  movement: false,
+  movement: true,
   bg: "#FFF5F5",
-  //bg: "#000000",
   theme: "",
-  toggleBlur: false,
-  toggleTempBlur: false,
-  togglePercepBlur: false,
-  pos1X: 271,
-  pos1Y: 240,
+  toggleBlur: true,
+  toggleTempBlur: true,
+  togglePercepBlur: true,
+  pos1X: 607,
+  pos1Y: 269,
   pos2X: 373,
   pos2Y: 161,
   pos3X: 614,
@@ -85,45 +80,49 @@ const PARAMS = {
   ringBlur1: 0,
   ringBlur2: 3.7,
   ringBlur3: 1.74,
-  glassFilter: false,
+  glassFilter: true,
   bands: 86,
   distortion: 4.42,
-  angleStep: 0.25,
+  angleStep: 0.03,
   lineThickness: 0.87,
   gap: 0.16,
   circleSize: 2.74,
-  tempRingSize1: 3,
+  tempRingSize1: 5,
   tempRingSize2: 3.6,
   tempRingSize3: 6,
-  tempRingInnerSize: 100,
-  tempRingPow: 1.14,
+  tempRingInnerSize: 136,
+  tempRingPow: 1.12,
   percepGap: 0.1,
   percepsAngleStep: 0.07,
-  ringGap: 16,
-  clockSize: 100,
-  clockFade: 1,
-  minute: 0,
+  ringGap: 4,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
 const sunlighColor = ["#1B0034", "e0c31d"]; // sunny, cloudy
 let tempColor;
-let temp = [
-  27, 27, 26, 26, 26, 26, 26, 28, 30, 32, 33, 34, 35, 35, 36, 35, 34, 33, 32,
-  30, 29, 29, 28, 28,
+const temp = [
+  23, 23, 22, 22.6, 22, 22, 23, 23, 23, 24, 25, 26, 26, 26, 26, 26, 26, 26, 25,
+  24, 23.08, 23, 23.1, 23,
 ];
-temp = temp.splice(12, 23);
 
-let perceps = [
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0.01, 0.03, 0.07, 0.07, 0.11, 0.44, 0.44,
-  0.51, 0, 0, 0, 0, 0,
+const humidityColor = ["#DCA100", "#1000C6"]; // dry, humid
+const humidity = [
+  0.59, 0.87, 0.02, 0.18, 0.65, 0.72, 0.91, 0.99, 0.86, 0.03, 0.44, 0.81, 0.19,
+  0.39, 0.72, 0.42, 0.24, 0.13, 0.56, 0.73, 0.64, 0.18, 0.6, 0.46,
 ];
-console.log(perceps.length);
-perceps = perceps.splice(12, 23);
+
+const perceps = [
+  0.15, 0.14, 0.12, 0.29, 0.14, 0.12, 0.17, 0.18, 0.26, 0.15, 0.51, 0.78, 1.0,
+  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.58, 0.34, 0.16, 0.13, 0.15, 0.27, 0.14, 0.28,
+  0.1, 0.17, 0.2, 0.26, 0.27, 0.21, 0.18, 0.43, 0.74, 1.0, 1.0, 1.0, 1.0, 1.0,
+  1.0, 1.0, 0.21, 0.14, 0.25, 0.11, 0.28,
+];
 
 const weatherData = [];
 let ys = [];
 let amount = 30;
+let noiseGra;
+const [_Width, _Height] = [860, 480];
 let fontMono, fontSerif, abcOracleLight, abcOracleGreek;
 let date = new Date();
 let formattedTime =
@@ -155,16 +154,9 @@ async function setup() {
 
   // Temperature gradient colors
   coldColor = color("#BCD9D7"); // blueish teal
-  hotColor = color("#ff5050"); // red-orange
-  coldColor1 = color(242, 154, 154, 0);
+  hotColor = color("#FBAD6F"); // red-orange
+  coldColor1 = color("#C2E0F8");
   hotColor1 = color("#FF817A");
-  hourColor = color("#947EB0");
-  minuteColor = color("#D0BFE7");
-  hourColor = color(180);
-  minuteColor = color(210);
-  //coldColor = color(188, 217, 215, 0);
-
-  PARAMS.minute = minute();
 
   createCanvas(_Width, _Height);
 
@@ -185,10 +177,26 @@ async function setup() {
   }
 `);
 
+  const bgClr = color("#ffd500");
+  bgClr.setAlpha(50);
+  background(bgClr);
   for (let i = 0; i < amount; i++) {
     const y = (height / amount) * i;
     ys.push(y);
   }
+  noiseGra = createGraphics(_Width, _Height);
+  noiseGra.loadPixels();
+  for (let x = 0; x <= width; x++) {
+    for (let y = 0; y <= height; y++) {
+      noiseGra.set(
+        x,
+        y,
+        color(0, noise(x / 10, y / 10, (x * y) / 50) * random([0, 20]))
+      );
+    }
+  }
+  noiseGra.updatePixels();
+  image(noiseGra, 0, 0);
 
   tempGraphic = createGraphics(width, height);
   tempGraphic1 = createGraphics(width, height);
@@ -198,11 +206,11 @@ async function setup() {
   percepsGraphic1 = createGraphics(width, height);
   percepsGraphic2 = createGraphics(width, height);
   percepsGraphic3 = createGraphics(width, height);
-  clockGraphic = createGraphics(width, height);
 }
 
 function draw() {
   clear();
+  image(noiseGra, 0, 0);
   background(PARAMS.bg);
 
   textSize(50);
@@ -244,14 +252,14 @@ function draw() {
   let xMovement3 = PARAMS.movement ? (noise(xOffset3) - 0.5) * width : 0;
   let yMovement3 = PARAMS.movement ? (noise(yOffset3) - 0.5) * height : 0;
 
-  drawClock(PARAMS.pos1X + xMovement1, PARAMS.pos1Y + yMovement1);
-
   // First climate ring
   push();
   drawClimateRing(
     PARAMS.pos1X + xMovement1,
     PARAMS.pos1Y + yMovement1,
     240,
+    28,
+    70,
     tempGraphic1,
     percepsGraphic1,
     PARAMS.ringBlur1,
@@ -261,11 +269,71 @@ function draw() {
   );
   pop();
 
+  // Second climate ring
+  push();
+  drawClimateRing(
+    PARAMS.pos2X + xMovement2 * 0.8,
+    PARAMS.pos2Y + yMovement2 * 0.8,
+    200,
+    28,
+    70,
+    tempGraphic2,
+    percepsGraphic2,
+    PARAMS.ringBlur2,
+    PARAMS.tempRingSize2,
+    hotColor1,
+    coldColor1
+  );
+  pop();
+
+  // Third climate ring
+  push();
+  drawClimateRing(
+    PARAMS.pos3X + xMovement3 * 1.2,
+    PARAMS.pos3Y + yMovement3 * 1.2,
+    240,
+    28,
+    70,
+    tempGraphic3,
+    percepsGraphic3,
+    PARAMS.ringBlur3,
+    PARAMS.tempRingSize3,
+    hotColor1,
+    coldColor1
+  );
+  pop();
+
   if (PARAMS.glassFilter) {
     filter(glassShader);
   }
-  // drawText(textGraphic);
+
+  drawText(textGraphic);
   //image(cloudIcon, 500, 270, 90, 56);
+}
+function drawSun(x, y, size) {
+  push();
+  translate(x, y);
+  beginClip();
+  circle(0, 0, size);
+  endClip();
+  for (let i = 0; i < ys.length; i++) {
+    const weight = map(ys[i], 0, height, height / amount, 1);
+    const alpha = map(ys[i], 0, height, 255, 200);
+    const clr1 = tempColor[1];
+    const clr2 = tempColor[0];
+    const ratio = map(ys[i], 0, height, 0, 1);
+    const mixedClr = lerpColor(clr1, clr2, ratio);
+    const strokeClr = color(mixedClr);
+    strokeClr.setAlpha(alpha);
+    strokeWeight(weight);
+    stroke(strokeClr);
+    line(0 - x, ys[i] - y, width, ys[i] - y);
+    if (ys[i] > height) {
+      ys[i] = 0;
+    }
+    ys[i] += 0.3;
+  }
+  pop();
 }
 
 // -------------------- UTILS -------------------------------
@@ -288,6 +356,8 @@ function drawClimateRing(
   cx,
   cy,
   radius,
+  temperature,
+  precipitation,
   tempGraphic,
   percepsGraphic,
   graphicBlur = 0,
@@ -297,13 +367,15 @@ function drawClimateRing(
 ) {
   let outerRadius = radius;
   let innerRadiusTemp = radius - PARAMS.tempRingInnerSize; // Adjusted to remove gap
+
+  // Draw temperature ring
   drawGradientRing(
     cx,
     cy,
     outerRadius,
     innerRadiusTemp,
     -PI / 2,
-    1.5 * PI - 0.01,
+    1.5 * PI,
     colorHot,
     colorCold,
     tempGraphic,
@@ -311,6 +383,7 @@ function drawClimateRing(
     tempRingSize
   );
 
+  // Draw precipitation ring
   drawAlphaRing(
     cx,
     cy,
@@ -352,53 +425,44 @@ function drawGradientRing(
   let lineThickness = PARAMS.lineThickness; // Thickness of each line segment
   let gap = PARAMS.gap; // Gap between each line segment
 
-  const maxTemp = Math.max(...temp);
-  const minTemp = Math.min(...temp);
-  const R = size * Math.pow(maxTemp, PARAMS.tempRingPow);
-  let totalLength = R - innerRadius;
+  let totalLength = dist(
+    cx + cos(startAngle) * outerRadius,
+    cy + sin(startAngle) * outerRadius,
+    cx + cos(startAngle) * innerRadius,
+    cy + sin(startAngle) * innerRadius
+  );
 
-  for (let angle = startAngle; angle <= endAngle; angle += adjustedAngleStep) {
+  for (
+    let angle = startAngle;
+    angle <= endAngle;
+    angle += adjustedAngleStep + radians(gap)
+  ) {
     tempGraphic.strokeWeight(lineThickness);
-    let angleToTime = map(angle, startAngle, endAngle, 0, _Range);
+    let angleToTime = map(angle, startAngle, endAngle, 0, 11);
 
     let tempItem = temp[Math.round(angleToTime)];
     //let tempIndex = map(tempItem, 20, 40, 0, 1);
     //let col = lerpColor(startColor, endColor, tempIndex);
     //tempGraphic.stroke(col);
 
-    let startX = cx + cos(angle) * innerRadius;
-    let startY = cy + sin(angle) * innerRadius;
+    let x1 = cx + cos(angle) * size * pow(tempItem, PARAMS.tempRingPow);
+    let y1 = cy + sin(angle) * size * pow(tempItem, PARAMS.tempRingPow);
+    let x2 = cx + cos(angle) * innerRadius;
+    let y2 = cy + sin(angle) * innerRadius;
 
-    const interval = PI / 6;
-    const tolerance = interval * 0.05;
-    if (
-      Math.abs((angle % interval) - interval) > tolerance ||
-      Math.abs(angle % interval) > tolerance
-    ) {
-      //totalLength *= 0.8;
-    }
+    //tempGraphic.line(x1, y1, x2, y2);
+    let currentLength = dist(x1, y1, x2, y2);
 
-    let endX = startX + cos(angle) * totalLength;
-    let endY = startY + sin(angle) * totalLength;
-
-    let tempX = map(tempItem, minTemp, maxTemp, startX, endX);
-    let tempY = map(tempItem, minTemp, maxTemp, startY, endY);
-    let currentLength = dist(tempX, tempY, startX, startY);
-
-    drawUnit(
+    gradientLine(
       tempGraphic,
-      tempX,
-      tempY,
-      startX,
-      startY,
+      x1,
+      y1,
+      x2,
+      y2,
       startColor,
       endColor,
       totalLength,
-      currentLength,
-      angle,
-      tempItem,
-      endX,
-      endY
+      currentLength
     );
   }
 
@@ -443,7 +507,7 @@ function drawAlphaRing(
     angle += adjustedAngleStep + radians(gap)
   ) {
     percepsGraphic.strokeWeight(lineThickness);
-    let angleToTime = map(angle, startAngle, endAngle, 0, _Range);
+    let angleToTime = map(angle, startAngle, endAngle, 0, 11);
 
     let percepItem = perceps[Math.round(angleToTime)];
     let amount = Math.round(map(percepItem, 0, 1, 0, 10));
@@ -462,108 +526,6 @@ function drawAlphaRing(
   }
   // Draw the blurred ring onto the main canvas
   image(percepsGraphic, 0, 0);
-}
-
-function drawClock(x, y) {
-  let s = map(second(), 0, 60, 0, TWO_PI) - HALF_PI;
-  let m = map(PARAMS.minute, 0, 60, 0, TWO_PI) - HALF_PI;
-  let h =
-    map(hour(), 0, 12, 0, TWO_PI) -
-    HALF_PI +
-    map(PARAMS.minute, 0, 60, 0, TWO_PI) / 12;
-
-  conicCircle(x, y, PARAMS.clockSize + 30, [minuteColor, coldColor], m);
-  conicCircle(x, y, PARAMS.clockSize, [hourColor, coldColor], h);
-}
-
-function drawUnit(
-  graphic,
-  tempX,
-  tempY,
-  startX,
-  startY,
-  color1,
-  color2,
-  totalLength,
-  currentLength,
-  angle,
-  tempItem,
-  endX,
-  endY
-) {
-  const step = 5;
-  //text(currentLength.toString(), x1, y1);
-  //beginShape();
-  graphic.strokeWeight(0.5);
-  graphic.stroke(color1);
-
-  gradientLine(
-    graphic,
-    startX,
-    startY,
-    endX,
-    endY,
-    color2,
-    color1,
-    totalLength,
-    currentLength
-  );
-  // graphic.line(
-  //   startX,
-  //   startY,
-  //   startX + cos(angle) * totalLength,
-  //   startY + sin(angle) * totalLength
-  // );
-  const fillColor = lerpColor(color2, color1, currentLength / totalLength);
-  graphic.fill(fillColor);
-  graphic.circle(tempX, tempY, 5);
-  const textOffset = 30;
-  graphic.noStroke();
-  graphic.textAlign(CENTER, CENTER);
-  graphic.fill(color1);
-  graphic.textFont(abcOracleGreek);
-  graphic.textSize(8);
-  // Define the interval (e.g., PI / 6 for every 30 degrees)
-  const interval = PI / 6;
-  const tolerance = interval * 0.05;
-
-  // Check if the angle is close to a multiple of the interval within the full circle
-  if (
-    Math.abs((angle % interval) - interval) < tolerance ||
-    Math.abs(angle % interval) < tolerance
-  ) {
-    graphic.text(
-      tempItem.toString(),
-      endX + cos(angle) * textOffset,
-      endY + sin(angle) * textOffset
-    );
-  }
-  graphic.noStroke();
-  for (let stop = 0; stop < currentLength; stop += step) {
-    let posX = lerp(tempX, startX, stop / currentLength);
-    let posY = lerp(tempY, startY, stop / currentLength);
-    //circle(posX, posY, 3);
-  }
-  // endShape();
-  /*
-    beginShape();
-    for (x = offset; x < width - offset; x +=xStep) {
-      a = noise(x_offset + x / width, y, noise(t)) * a_amp;
-      b = noise(x_offset + x / width + y - t) * b_amp;
-      let vx = x + sin(a | b) * (cos(a) - sin(x | y)) * 0;
-      let vy = (constrain(tan(a % b), -1, 1) * yStep) / 4;
-      let vn = map(vy - y, -yStep / 3, yStep / 3, 0, 1);
-      let i = map(sin(vy / 5 + frameCount / 10 + vx / 50 + vn),-1,1,0,1)*colors.length/3;
-      let n = int(i);
-      let m = (n+1)%colors.length;
-      let f = i%1;
-      let c = lerpColor(colors[n],colors[m],f);
-      strokeWeight(xStep);
-      stroke(c);
-      line(vx, y + vy, vx, y - vy);
-    }
-    endShape();
-  */
 }
 
 function gradientLine(
@@ -585,7 +547,7 @@ function gradientLine(
 
   //const endColor = lerpColor(color1, color2, proportion);
   let targetColor = lerpColor(color(color2), color(color1), proportion);
-  gradient.addColorStop(0, color1.toString());
+  gradient.addColorStop(0, targetColor.toString());
   gradient.addColorStop(1, color2.toString());
 
   ctx.strokeStyle = gradient;
@@ -691,7 +653,7 @@ const setupDebugPanel = () => {
     max: 10,
   });
   temperature.addInput(PARAMS, "angleStep", {
-    min: 0.00001,
+    min: 0,
     max: 0.5,
   });
   temperature.addInput(PARAMS, "lineThickness", {
@@ -762,257 +724,4 @@ const setupDebugPanel = () => {
     min: 0,
     max: _Height,
   });
-  misc.addInput(PARAMS, "clockSize", {
-    min: 0,
-    max: 400,
-  });
-  misc.addInput(PARAMS, "clockFade", {
-    min: 0,
-    max: 1,
-  });
-  misc.addInput(PARAMS, "minute", {
-    min: 0,
-    max: 59,
-  });
 };
-
-class Easing {
-  static easeInSine(x) {
-    return 1 - Math.cos((x * Math.PI) / 2);
-  }
-
-  static easeOutSine(x) {
-    return Math.sin((x * Math.PI) / 2);
-  }
-
-  static easeInOutSine(x) {
-    return -(Math.cos(Math.PI * x) - 1) / 2;
-  }
-
-  static easeInQuad(x) {
-    return x * x;
-  }
-
-  static easeOutQuad(x) {
-    return 1 - (1 - x) * (1 - x);
-  }
-
-  static easeInOutQuad(x) {
-    return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
-  }
-
-  static easeInCubic(x) {
-    return x * x * x;
-  }
-
-  static easeOutCubic(x) {
-    return 1 - Math.pow(1 - x, 3);
-  }
-
-  static easeInOutCubic(x) {
-    return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-  }
-
-  static easeInQuart(x) {
-    return x * x * x * x;
-  }
-
-  static easeOutQuart(x) {
-    return 1 - Math.pow(1 - x, 4);
-  }
-
-  static easeInOutQuart(x) {
-    return x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2;
-  }
-
-  static easeInQuint(x) {
-    return x * x * x * x * x;
-  }
-
-  static easeOutQuint(x) {
-    return 1 - Math.pow(1 - x, 5);
-  }
-
-  static easeInOutQuint(x) {
-    return x < 0.5 ? 16 * x * x * x * x * x : 1 - Math.pow(-2 * x + 2, 5) / 2;
-  }
-
-  static easeInExpo(x) {
-    return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
-  }
-
-  static easeOutExpo(x) {
-    return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-  }
-
-  static easeInOutExpo(x) {
-    return x === 0
-      ? 0
-      : x === 1
-      ? 1
-      : x < 0.5
-      ? Math.pow(2, 20 * x - 10) / 2
-      : (2 - Math.pow(2, -20 * x + 10)) / 2;
-  }
-
-  static easeInCirc(x) {
-    return 1 - Math.sqrt(1 - Math.pow(x, 2));
-  }
-
-  static easeOutCirc(x) {
-    return Math.sqrt(1 - Math.pow(x - 1, 2));
-  }
-
-  static easeInOutCirc(x) {
-    return x < 0.5
-      ? (1 - Math.sqrt(1 - Math.pow(2 * x, 2))) / 2
-      : (Math.sqrt(1 - Math.pow(-2 * x + 2, 2)) + 1) / 2;
-  }
-
-  static easeInBack(x) {
-    const c1 = 1.70158;
-    const c3 = c1 + 1;
-    return c3 * x * x * x - c1 * x * x;
-  }
-
-  static easeOutBack(x) {
-    const c1 = 1.70158;
-    const c3 = c1 + 1;
-    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
-  }
-
-  static easeInOutBack(x) {
-    const c1 = 1.70158;
-    const c2 = c1 * 1.525;
-    return x < 0.5
-      ? (Math.pow(2 * x, 2) * ((c2 + 1) * 2 * x - c2)) / 2
-      : (Math.pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
-  }
-  static easeInElastic(x) {
-    const c4 = (2 * Math.PI) / 3;
-    return x === 0
-      ? 0
-      : x === 1
-      ? 1
-      : -Math.pow(2, 10 * x - 10) * Math.sin((x * 10 - 10.75) * c4);
-  }
-
-  static easeOutElastic(x) {
-    const c4 = (2 * Math.PI) / 3;
-    return x === 0
-      ? 0
-      : x === 1
-      ? 1
-      : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
-  }
-
-  static easeInOutElastic(x) {
-    const c5 = (2 * Math.PI) / 4.5;
-    return x === 0
-      ? 0
-      : x === 1
-      ? 1
-      : x < 0.5
-      ? -(Math.pow(2, 20 * x - 10) * Math.sin((20 * x - 11.125) * c5)) / 2
-      : (Math.pow(2, -20 * x + 10) * Math.sin((20 * x - 11.125) * c5)) / 2 + 1;
-  }
-
-  static easeInBounce(x) {
-    return 1 - Easing.easeOutBounce(1 - x);
-  }
-
-  static easeOutBounce(x) {
-    const n1 = 7.5625;
-    const d1 = 2.75;
-    if (x < 1 / d1) {
-      return n1 * x * x;
-    } else if (x < 2 / d1) {
-      return n1 * (x -= 1.5 / d1) * x + 0.75;
-    } else if (x < 2.5 / d1) {
-      return n1 * (x -= 2.25 / d1) * x + 0.9375;
-    } else {
-      return n1 * (x -= 2.625 / d1) * x + 0.984375;
-    }
-  }
-
-  static easeInOutBounce(x) {
-    return x < 0.5
-      ? (1 - Easing.easeOutBounce(1 - 2 * x)) / 2
-      : (1 + Easing.easeOutBounce(2 * x - 1)) / 2;
-  }
-}
-
-// ref https://github.com/Creativeguru97/YouTube_tutorial/blob/master/p5_hacks/Gradient_effect/conical_gradient/sketch.js
-function conicGradient(sA, sX, sY, colors) {
-  let gradient = drawingContext.createConicGradient(sA, sX, sY);
-  gradient.addColorStop(0, colors[0]);
-  gradient.addColorStop(0.25, colors[1]);
-  gradient.addColorStop(0.5, colors[2]);
-  gradient.addColorStop(0.75, colors[3]);
-  gradient.addColorStop(1, colors[0]);
-
-  drawingContext.strokeStyle = gradient;
-}
-
-function shadow() {
-  drawingContext.shadowOffsetX = 10;
-  drawingContext.shadowOffsetY = 10;
-  drawingContext.shadowBlur = 16;
-  drawingContext.shadowColor = color(230, 30, 18, 100);
-}
-
-const temp1 = [
-  27, 27, 26, 26, 26, 26, 26, 28, 30, 32, 33, 34, 35, 35, 36, 35, 34, 33, 32,
-  30, 29, 29, 28, 28,
-];
-
-const precipitation1 = [
-  0.01, 0.01, 0.03, 0.07, 0.07, 0.11, 0.44, 0.44, 0.51, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0,
-];
-
-//function draw() {
-
-//}
-
-function conicCircle(x, y, r, colors, angle) {
-  const ctx = drawingContext;
-
-  // Start angle for the gradient
-  let startAngle = 0;
-
-  try {
-    const browserbrands = navigator.userAgentData.brands;
-    if (
-      browserbrands.find(
-        (elm) => elm.brand.includes("Firefox") || elm.brand.includes("Safari")
-      )
-    ) {
-      startAngle = angle;
-    }
-  } catch (e) {
-    console.error(e);
-    startAngle = angle;
-  }
-
-  // Create a conic gradient
-  const gradient = ctx.createConicGradient(angle, x, y);
-
-  function easeOutCirc(x) {
-    return Math.sqrt(1 - Math.pow(x - 1, 2));
-  }
-
-  const steps = 100;
-
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const easedT = easeOutCirc(t);
-    const color1 = lerpColor(color(colors[0]), color(PARAMS.bg), easedT);
-    gradient.addColorStop(t * PARAMS.clockFade, color1.toString());
-  }
-
-  // gradient.addColorStop(1, colors[0]);
-  // gradient.addColorStop(0, color(PARAMS.bg));
-  ctx.fillStyle = gradient;
-  ellipse(x, y, r, r);
-}
