@@ -104,8 +104,8 @@ const PARAMS = {
   clockFade: 1,
   minute: 0,
   animate: true,
-  clockSpeed: 25,
-  easingStrength: 2,
+  clockSpeed: 18,
+  easingStrength: 4,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -527,7 +527,7 @@ function drawUnit(
   graphic.textAlign(CENTER, CENTER);
   graphic.fill(color1);
   graphic.textFont(abcOracleGreek);
-  graphic.textSize(8);
+  graphic.textSize(14);
   // Define the interval (e.g., PI / 6 for every 30 degrees)
   const interval = PI / 6;
   const tolerance = interval * 0.05;
