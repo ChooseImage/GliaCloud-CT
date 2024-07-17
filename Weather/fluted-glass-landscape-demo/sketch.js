@@ -112,6 +112,8 @@ const PARAMS = {
   window1H: 0.3,
   window2W: 0.1,
   window2H: 0.26,
+  annotation1: false,
+  annotation2: true,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -385,6 +387,12 @@ function draw() {
   drawText(textGraphic);
 
   //image(cloudIcon, 500, 270, 90, 56);
+
+  // PARAMS.window1Pos.x += xMovement1 / _Width;
+  // PARAMS.window1Pos.y += yMovement1 / _Height;
+
+  // PARAMS.window2Pos.x += xMovement3 / _Width;
+  // PARAMS.window2Pos.y += yMovement3 / _Height;
 }
 function drawSun(x, y, size) {
   push();
@@ -690,8 +698,6 @@ const drawText = (textGraphic) => {
   textGraphic.textSize(22);
   textGraphic.noStroke();
   textGraphic.fill("blue");
-  //console.log("rainX", rainX, "rainY", rainY);
-  textGraphic.circle(rainX, rainY, 3);
   textGraphic.text(condition, 300, 690);
   textGraphic.pop();
 
@@ -880,6 +886,12 @@ const setupDebugPanel = () => {
     min: 0,
     max: _Height,
   });
+  misc.addInput(PARAMS, "annotation1", {
+    view: "checkbox",
+  });
+  misc.addInput(PARAMS, "annotation2", {
+    view: "checkbox",
+  });
 };
 
 function typeWriter(string) {
@@ -916,18 +928,13 @@ function typeWriter(string) {
   strokeWeight(2);
   image(cloudImage, 60, 100, 70, 42);
 
-  strokeWeight(1);
-  stroke(accentColor);
-  // max
-  line(maxX, maxY, 400, 180);
-  line(340, 180, 400, 180);
+  if (PARAMS.annotation1) {
+    drawAnno1();
+  }
 
-  //min
-  line(minX, minY, 400, 225);
-  line(300, 225, 400, 225);
-
-  circle(maxX, maxY, 3);
-  circle(minX, minY, 3);
+  if (PARAMS.annotation2) {
+    drawAnno2();
+  }
 
   textFont(kazimirLI);
   noStroke();
@@ -949,8 +956,55 @@ function typeWriter(string) {
 }
 
 function shadow(graphic) {
-  graphic.drawingContext.shadowOffsetX = 8;
-  graphic.drawingContext.shadowOffsetY = 8;
-  graphic.drawingContext.shadowBlur = 6;
+  //https://openprocessing.org/sketch/858175/
+  graphic.drawingContext.shadowOffsetX = 1;
+  graphic.drawingContext.shadowOffsetY = 1;
+  graphic.drawingContext.shadowBlur = 5;
   graphic.drawingContext.shadowColor = color(0, 27, 200, 100);
+}
+
+function drawAnno1() {
+  strokeWeight(1);
+  stroke(0, 27, 200, 100);
+  // max
+  line(maxX, maxY, 400, 180);
+  line(340, 180, 400, 180);
+
+  //min
+  line(minX, minY, 400, 225);
+  line(300, 225, 400, 225);
+
+  //rain
+  line(rainX, rainY, 400, 420);
+  line(155, 420, 400, 420);
+
+  circle(maxX, maxY, 3);
+  circle(minX, minY, 3);
+  circle(rainX, rainY, 3);
+}
+
+function drawAnno2() {
+  push();
+  strokeWeight(1);
+  stroke(0, 27, 200, 100);
+  // max
+  line(maxX, maxY, 650, 70);
+  fill(accentColor);
+  textSize(20);
+  text("PEAK: 35º", 650, 70);
+  text("11:45", 650, 90);
+
+  text("LOWEST: 25º", 730, 200);
+  text("02:30", 730, 220);
+
+  //min
+  line(minX, minY, 730, 200);
+
+  //rain
+  line(rainX, rainY, 440, 387);
+
+  circle(maxX, maxY, 3);
+  circle(minX, minY, 3);
+  circle(rainX, rainY, 3);
+  pop();
 }
