@@ -27,6 +27,10 @@ let txtColor = "#000000";
 let bands = 45;
 let distortion = 1.5;
 
+let cloudImage;
+
+let accentColor = "#001BC8";
+
 let maxX, maxY, minX, minY, rainX, rainY;
 
 let hotColor, coldColor, hotColor1, coldColor1;
@@ -70,8 +74,8 @@ let mappedTemps, mappedPerceps, mappedWind, mappedHumidity;
 
 const pane = new Tweakpane.Pane();
 const PARAMS = {
-  movement: false,
-  movementAmp: 1,
+  movement: true,
+  movementAmp: 0.2,
   bg: "#FFF5F5",
   theme: "",
   toggleBlur: true,
@@ -102,10 +106,12 @@ const PARAMS = {
   percepGap: 0.1,
   percepsAngleStep: 0.07,
   ringGap: 4,
-  window1X: 0.58,
-  window1Y: 0.15,
-  window1W: 0.12,
-  window1H: 0.2,
+  window1Pos: { x: 0.05, y: -0.43 },
+  window2Pos: { x: 0.28, y: -0.31 },
+  window1W: 0.18,
+  window1H: 0.3,
+  window2W: 0.1,
+  window2H: 0.26,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -136,7 +142,8 @@ let fontMono,
   abcOracleLight,
   abcOracleGreek,
   abcSyntSlant,
-  spectralElLt;
+  spectralElLt,
+  kazimirLI;
 let date = new Date();
 let formattedTime =
   date.getHours() +
@@ -150,6 +157,12 @@ function preload() {
   abcOracleGreek = loadFont("assets/fonts/ABCOracleGreek-Md-Trial.ttf");
   abcSyntSlant = loadFont("assets/fonts/ABCSynt-BookSlant-Trial.ttf");
   spectralElLt = loadFont("assets/fonts/Spectral-ExtraLightItalic.ttf");
+  kazimirLI = loadFont("assets/fonts/Kazimir-Light-Italic.ttf");
+
+  cloudImage = loadImage(
+    "https://www.aopa.org/-/media/Images/AOPA-Main/News-and-Media/Publications/Flight-Training-Magazine/2010f/2010f_pf_wx/2010f_pf_wx_16x9.jpg"
+  );
+
   font = loadFont(
     "https://fonts.gstatic.com/s/prompt/v10/-W_6XJnvUD7dzB2KZeKka2MrUZEtdzow.ttf"
   );
@@ -185,23 +198,33 @@ async function setup() {
   uniform float bands;
   uniform float distortion;
 
-  uniform vec2 maskPosition;
-  uniform vec2 maskSize;
+  uniform vec2 tHighPosition;
+  uniform vec2 tHighSize;
+
+  uniform vec2 tLowPosition;
+  uniform vec2 tLowSize;
   
   void main() {
-    vec2 coord = vTexCoord;
-    bool insideMask = 
-    coord.x >= maskPosition.x && 
-    coord.x <= maskPosition.x + maskSize.x &&
-    coord.y >= maskPosition.y && 
-    coord.y <= maskPosition.y + maskSize.y;
-  
-  if (!insideMask) {
-    // Apply the distortion effect only outside the mask
+  vec2 coord = vTexCoord;
+
+  bool insideHighMask = 
+    coord.x >= tHighPosition.x && 
+    coord.x <= tHighPosition.x + tHighSize.x &&
+    coord.y >= tHighPosition.y && 
+    coord.y <= tHighPosition.y + tHighSize.y;
+
+  bool insideLowMask = 
+    coord.x >= tLowPosition.x && 
+    coord.x <= tLowPosition.x + tLowSize.x &&
+    coord.y >= tLowPosition.y && 
+    coord.y <= tLowPosition.y + tLowSize.y;
+
+  if (!insideHighMask && !insideLowMask) {
+    // Apply the distortion effect only outside both masks
     float cellCenter = (floor(coord.x * bands) + 0.5) / bands;
     coord.x = (coord.x - cellCenter) * distortion + cellCenter;
   }
-  
+
   gl_FragColor = texture2D(tex0, coord);
   }
 `);
@@ -259,8 +282,16 @@ function draw() {
   fill(color("#7E3328"));
   glassShader.setUniform("bands", PARAMS.bands);
   glassShader.setUniform("distortion", PARAMS.distortion);
-  glassShader.setUniform("maskPosition", [PARAMS.window1X, PARAMS.window1Y]); // Example: mask starts at 25% from top-left
-  glassShader.setUniform("maskSize", [PARAMS.window1W, PARAMS.window1H]); // Example: mask covers 50% of width and height
+  glassShader.setUniform("tHighPosition", [
+    PARAMS.window1Pos.x + 0.5,
+    PARAMS.window1Pos.y + 0.5,
+  ]); // Example: mask starts at 25% from top-left
+  glassShader.setUniform("tHighSize", [PARAMS.window1W, PARAMS.window1H]); // Example: mask covers 50% of width and height
+  glassShader.setUniform("tLowPosition", [
+    PARAMS.window2Pos.x + 0.5,
+    PARAMS.window2Pos.y + 0.5,
+  ]); // Example: mask starts at 25% from top-left
+  glassShader.setUniform("tLowSize", [PARAMS.window2W, PARAMS.window2H]); // Example: mask covers 50% of width and height
   push();
   if (PARAMS.movement) {
     xOffset += 0.0005 * motion;
@@ -349,10 +380,10 @@ function draw() {
   if (PARAMS.glassFilter) {
     filter(glassShader);
   }
-
-  drawText(textGraphic);
   drawShadow();
-  //typeWriter(introText);
+  typeWriter(introText);
+  drawText(textGraphic);
+
   //image(cloudIcon, 500, 270, 90, 56);
 }
 function drawSun(x, y, size) {
@@ -528,7 +559,7 @@ function drawGradientRing(
   }
 
   if (PARAMS.toggleBlur) {
-    tempGraphic.filter(BLUR, blur); // Apply blur effect
+    tempGraphic.filter(BLUR, 0); // Apply blur effect
   }
 
   // Draw the blurred ring onto the main canvas
@@ -658,8 +689,6 @@ const drawText = (textGraphic) => {
   );
   textGraphic.textSize(22);
   textGraphic.noStroke();
-  textGraphic.circle(maxX, maxY, 3);
-  textGraphic.circle(minX, minY, 3);
   textGraphic.fill("blue");
   //console.log("rainX", rainX, "rainY", rainY);
   textGraphic.circle(rainX, rainY, 3);
@@ -675,15 +704,20 @@ function drawShadow() {
   shadowGraphic.stroke(255, 40);
   shadowGraphic.strokeWeight(2);
   shadowGraphic.rect(
-    PARAMS.window1X * _Width,
-    PARAMS.window1Y * _Height,
+    (PARAMS.window1Pos.x + 0.5) * _Width,
+    (PARAMS.window1Pos.y + 0.5) * _Height,
     PARAMS.window1W * _Width,
     PARAMS.window1H * _Height
+  );
+  shadowGraphic.rect(
+    (PARAMS.window2Pos.x + 0.5) * _Width,
+    (PARAMS.window2Pos.y + 0.5) * _Height,
+    PARAMS.window2W * _Width,
+    PARAMS.window2H * _Height
   );
   shadow(shadowGraphic);
   image(shadowGraphic, 0, 0);
 }
-
 const setupDebugPanel = () => {
   const shaders = pane.addFolder({
     title: "Effects",
@@ -747,14 +781,6 @@ const setupDebugPanel = () => {
     min: 0,
     max: 100,
   });
-  shaders.addInput(PARAMS, "window1X", {
-    min: 0,
-    max: 1,
-  });
-  shaders.addInput(PARAMS, "window1Y", {
-    min: 0,
-    max: 1,
-  });
   shaders.addInput(PARAMS, "window1W", {
     min: 0,
     max: 1,
@@ -763,7 +789,25 @@ const setupDebugPanel = () => {
     min: 0,
     max: 1,
   });
+  shaders.addInput(PARAMS, "window2W", {
+    min: 0,
+    max: 1,
+  });
+  shaders.addInput(PARAMS, "window2H", {
+    min: 0,
+    max: 1,
+  });
 
+  shaders.addInput(PARAMS, "window1Pos", {
+    expanded: true,
+    x: { min: -0.5, max: 0.5 },
+    y: { min: -0.5, max: 0.5 },
+  });
+  shaders.addInput(PARAMS, "window2Pos", {
+    expanded: true,
+    x: { min: -0.5, max: 0.5 },
+    y: { min: -0.5, max: 0.5 },
+  });
   temperature.addInput(PARAMS, "angleStep", {
     min: 0,
     max: 0.5,
@@ -848,10 +892,56 @@ function typeWriter(string) {
   push();
   textAlign(LEFT, TOP);
   fill(30);
+  textSize(32);
 
-  textFont(spectralElLt);
-  textSize(82);
-  text("26ºc ~ 35ºc", 60, 40);
+  textFont(abcOracleLight);
+  text("Expect", 60, 60);
+  text("today with temperatures", 140, 100);
+  text("peeking at", 60, 140);
+  text("and", 345, 140);
+  text("dipping to", 60, 183);
+  text("tonight", 310, 183);
+  text("with a", 60, 340);
+  text("chance of", 230, 340);
+  textFont(kazimirLI);
+  text("BROKEN CLOUDS", 185, 67);
+  text("RAIN", 70, 390);
+  text("IN THE", 158, 390);
+  text("AFTERNOON", 275, 390);
+  noFill();
+  stroke(color(accentColor));
+  rect(173, 62, 280, 35, 20); // broken cloud
+  rect(60, 387, 95, 35, 20); // rain
+  rect(265, 387, 200, 35, 20); // afternoon
+  strokeWeight(2);
+  image(cloudImage, 60, 100, 70, 42);
+
+  strokeWeight(1);
+  stroke(accentColor);
+  // max
+  line(maxX, maxY, 400, 180);
+  line(340, 180, 400, 180);
+
+  //min
+  line(minX, minY, 400, 225);
+  line(300, 225, 400, 225);
+
+  circle(maxX, maxY, 3);
+  circle(minX, minY, 3);
+
+  textFont(kazimirLI);
+  noStroke();
+  fill(accentColor);
+  rect(224, 142, 115, 40, 10); // 35
+  rect(224, 185, 75, 40, 10); // 25
+  rect(150, 342, 75, 40, 10); // 50
+  fill(240);
+  text("35ºC", 233, 149);
+  text("25ºC", 230, 193);
+  text("50%", 160, 347);
+
+  textFont("Verdana");
+  text("🔥", 300, 149);
 
   //text(currentString, 10, 10, width, height);
   pop();
@@ -859,8 +949,8 @@ function typeWriter(string) {
 }
 
 function shadow(graphic) {
-  graphic.drawingContext.shadowOffsetX = 4;
-  graphic.drawingContext.shadowOffsetY = 4;
-  graphic.drawingContext.shadowBlur = 10;
+  graphic.drawingContext.shadowOffsetX = 8;
+  graphic.drawingContext.shadowOffsetY = 8;
+  graphic.drawingContext.shadowBlur = 6;
   graphic.drawingContext.shadowColor = color(0, 27, 200, 100);
 }
