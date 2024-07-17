@@ -27,7 +27,7 @@ let txtColor = "#000000";
 let bands = 45;
 let distortion = 1.5;
 
-let cloudImage;
+let cloudImage, showerImg;
 
 let accentColor = "#001BC8";
 
@@ -163,6 +163,10 @@ function preload() {
 
   cloudImage = loadImage(
     "https://www.aopa.org/-/media/Images/AOPA-Main/News-and-Media/Publications/Flight-Training-Magazine/2010f/2010f_pf_wx/2010f_pf_wx_16x9.jpg"
+  );
+
+  showerImg = loadImage(
+    "https://www.gbnews.com/media-library/a-man-walking-in-a-rain-shower-in-east-london-picture-date-tuesday-july-6-2021.jpg?id=32952454&width=980&quality=90"
   );
 
   font = loadFont(
@@ -1002,6 +1006,7 @@ function drawAnno2() {
 
   //rain
   line(rainX, rainY, 440, 387);
+  image(showerImg, rainX, rainY, 70, 42);
 
   circle(maxX, maxY, 3);
   circle(minX, minY, 3);
