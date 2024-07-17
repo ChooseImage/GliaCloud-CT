@@ -10,8 +10,12 @@ let tempGraphic;
 let condition;
 let tempGraphic1, tempGraphic2, tempGraphic3;
 let percepsGraphic1, percepsGraphic2, percepsGraphic3;
+let introText =
+  "18ºc ~ 29ºc with gusty winds throughout the day, partly cloudy skies turning overcast by evening. Expect a high UV index.";
+let percepText = "With a 23% chance of rain.";
+let currentCharacter = 0;
 
-let textGraphic;
+let textGraphic, shadowGraphic;
 let xOffset = 0;
 let yOffset = 10000;
 // glass
@@ -22,6 +26,8 @@ let motion = 1;
 let txtColor = "#000000";
 let bands = 45;
 let distortion = 1.5;
+
+let maxX, maxY, minX, minY, rainX, rainY;
 
 let hotColor, coldColor, hotColor1, coldColor1;
 
@@ -64,7 +70,8 @@ let mappedTemps, mappedPerceps, mappedWind, mappedHumidity;
 
 const pane = new Tweakpane.Pane();
 const PARAMS = {
-  movement: true,
+  movement: false,
+  movementAmp: 1,
   bg: "#FFF5F5",
   theme: "",
   toggleBlur: true,
@@ -72,29 +79,33 @@ const PARAMS = {
   togglePercepBlur: true,
   pos1X: 607,
   pos1Y: 269,
-  pos2X: 373,
-  pos2Y: 161,
+  pos2X: 589,
+  pos2Y: 250,
   pos3X: 614,
   pos3Y: 365,
   tempBlur: 0,
   ringBlur1: 0,
-  ringBlur2: 3.7,
+  ringBlur2: 0,
   ringBlur3: 1.74,
   glassFilter: true,
-  bands: 86,
-  distortion: 4.42,
+  bands: 255,
+  distortion: 17.39,
   angleStep: 0.03,
   lineThickness: 0.87,
   gap: 0.16,
   circleSize: 2.74,
   tempRingSize1: 5,
-  tempRingSize2: 3.6,
+  tempRingSize2: 5.3,
   tempRingSize3: 6,
-  tempRingInnerSize: 136,
+  tempRingInnerSize: 60.87,
   tempRingPow: 1.12,
   percepGap: 0.1,
   percepsAngleStep: 0.07,
   ringGap: 4,
+  window1X: 0.58,
+  window1Y: 0.15,
+  window1W: 0.12,
+  window1H: 0.2,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -112,10 +123,7 @@ const humidity = [
 ];
 
 const perceps = [
-  0.15, 0.14, 0.12, 0.29, 0.14, 0.12, 0.17, 0.18, 0.26, 0.15, 0.51, 0.78, 1.0,
-  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.58, 0.34, 0.16, 0.13, 0.15, 0.27, 0.14, 0.28,
-  0.1, 0.17, 0.2, 0.26, 0.27, 0.21, 0.18, 0.43, 0.74, 1.0, 1.0, 1.0, 1.0, 1.0,
-  1.0, 1.0, 0.21, 0.14, 0.25, 0.11, 0.28,
+  0.15, 0.14, 0.12, 0.29, 0.14, 0.12, 0.17, 0.18, 0.26, 0.15, 0.51, 1,
 ];
 
 const weatherData = [];
@@ -123,22 +131,29 @@ let ys = [];
 let amount = 30;
 let noiseGra;
 const [_Width, _Height] = [860, 480];
-let fontMono, fontSerif, abcOracleLight, abcOracleGreek;
+let fontMono,
+  fontSerif,
+  abcOracleLight,
+  abcOracleGreek,
+  abcSyntSlant,
+  spectralElLt;
 let date = new Date();
 let formattedTime =
   date.getHours() +
   ":" +
   (date.getMinutes() < 10 ? "0" : "") +
   date.getMinutes();
-
 function preload() {
   fontMono = loadFont("assets/fonts/NeueMet.ttf");
   fontSerif = loadFont("assets/fonts/Harmond SemiBold Condensed.ttf");
   abcOracleLight = loadFont("assets/fonts/ABCOracle-Light-Trial.ttf");
   abcOracleGreek = loadFont("assets/fonts/ABCOracleGreek-Md-Trial.ttf");
+  abcSyntSlant = loadFont("assets/fonts/ABCSynt-BookSlant-Trial.ttf");
+  spectralElLt = loadFont("assets/fonts/Spectral-ExtraLightItalic.ttf");
   font = loadFont(
     "https://fonts.gstatic.com/s/prompt/v10/-W_6XJnvUD7dzB2KZeKka2MrUZEtdzow.ttf"
   );
+
   cloudIcon = loadImage("./assets/imgs/cloudicon.png");
   requestJsonData();
 }
@@ -150,6 +165,7 @@ async function setup() {
   mappedPerceps = mapData(perceps, 40);
 
   textGraphic = createGraphics(_Width, _Height);
+  shadowGraphic = createGraphics(_Width, _Height);
   setupDebugPanel();
 
   // Temperature gradient colors
@@ -168,12 +184,25 @@ async function setup() {
   
   uniform float bands;
   uniform float distortion;
+
+  uniform vec2 maskPosition;
+  uniform vec2 maskSize;
   
   void main() {
     vec2 coord = vTexCoord;
+    bool insideMask = 
+    coord.x >= maskPosition.x && 
+    coord.x <= maskPosition.x + maskSize.x &&
+    coord.y >= maskPosition.y && 
+    coord.y <= maskPosition.y + maskSize.y;
+  
+  if (!insideMask) {
+    // Apply the distortion effect only outside the mask
     float cellCenter = (floor(coord.x * bands) + 0.5) / bands;
     coord.x = (coord.x - cellCenter) * distortion + cellCenter;
-    gl_FragColor = texture2D(tex0, coord);
+  }
+  
+  gl_FragColor = texture2D(tex0, coord);
   }
 `);
 
@@ -230,6 +259,8 @@ function draw() {
   fill(color("#7E3328"));
   glassShader.setUniform("bands", PARAMS.bands);
   glassShader.setUniform("distortion", PARAMS.distortion);
+  glassShader.setUniform("maskPosition", [PARAMS.window1X, PARAMS.window1Y]); // Example: mask starts at 25% from top-left
+  glassShader.setUniform("maskSize", [PARAMS.window1W, PARAMS.window1H]); // Example: mask covers 50% of width and height
   push();
   if (PARAMS.movement) {
     xOffset += 0.0005 * motion;
@@ -243,31 +274,43 @@ function draw() {
   let xOffset3 = xOffset + 2000;
   let yOffset3 = yOffset + 2000;
 
-  let xMovement1 = PARAMS.movement ? (noise(xOffset1) - 0.5) * width : 0;
-  let yMovement1 = PARAMS.movement ? (noise(yOffset1) - 0.5) * height : 0;
+  let xMovement1 = PARAMS.movement
+    ? (noise(xOffset1) - 0.5) * width * PARAMS.movementAmp
+    : 0;
+  let yMovement1 = PARAMS.movement
+    ? (noise(yOffset1) - 0.5) * height * PARAMS.movementAmp
+    : 0;
 
-  let xMovement2 = PARAMS.movement ? (noise(xOffset2) - 0.5) * width : 0;
-  let yMovement2 = PARAMS.movement ? (noise(yOffset2) - 0.5) * height : 0;
+  let xMovement2 = PARAMS.movement
+    ? (noise(xOffset2) - 0.5) * width * PARAMS.movementAmp
+    : 0;
+  let yMovement2 = PARAMS.movement
+    ? (noise(yOffset2) - 0.5) * height * PARAMS.movementAmp
+    : 0;
 
-  let xMovement3 = PARAMS.movement ? (noise(xOffset3) - 0.5) * width : 0;
-  let yMovement3 = PARAMS.movement ? (noise(yOffset3) - 0.5) * height : 0;
+  let xMovement3 = PARAMS.movement
+    ? (noise(xOffset3) - 0.5) * width * PARAMS.movementAmp
+    : 0;
+  let yMovement3 = PARAMS.movement
+    ? (noise(yOffset3) - 0.5) * height * PARAMS.movementAmp
+    : 0;
 
   // First climate ring
-  push();
-  drawClimateRing(
-    PARAMS.pos1X + xMovement1,
-    PARAMS.pos1Y + yMovement1,
-    240,
-    28,
-    70,
-    tempGraphic1,
-    percepsGraphic1,
-    PARAMS.ringBlur1,
-    PARAMS.tempRingSize1,
-    hotColor,
-    coldColor
-  );
-  pop();
+  // push();
+  // drawClimateRing(
+  //   PARAMS.pos1X + xMovement1,
+  //   PARAMS.pos1Y + yMovement1,
+  //   240,
+  //   28,
+  //   70,
+  //   tempGraphic1,
+  //   percepsGraphic1,
+  //   PARAMS.ringBlur1,
+  //   PARAMS.tempRingSize1,
+  //   hotColor,
+  //   coldColor
+  // );
+  // pop();
 
   // Second climate ring
   push();
@@ -287,27 +330,29 @@ function draw() {
   pop();
 
   // Third climate ring
-  push();
-  drawClimateRing(
-    PARAMS.pos3X + xMovement3 * 1.2,
-    PARAMS.pos3Y + yMovement3 * 1.2,
-    240,
-    28,
-    70,
-    tempGraphic3,
-    percepsGraphic3,
-    PARAMS.ringBlur3,
-    PARAMS.tempRingSize3,
-    hotColor1,
-    coldColor1
-  );
-  pop();
+  // push();
+  // drawClimateRing(
+  //   PARAMS.pos3X + xMovement3 * 1.2,
+  //   PARAMS.pos3Y + yMovement3 * 1.2,
+  //   240,
+  //   28,
+  //   70,
+  //   tempGraphic3,
+  //   percepsGraphic3,
+  //   PARAMS.ringBlur3,
+  //   PARAMS.tempRingSize3,
+  //   hotColor1,
+  //   coldColor1
+  // );
+  // pop();
 
   if (PARAMS.glassFilter) {
     filter(glassShader);
   }
 
   drawText(textGraphic);
+  drawShadow();
+  //typeWriter(introText);
   //image(cloudIcon, 500, 270, 90, 56);
 }
 function drawSun(x, y, size) {
@@ -432,6 +477,12 @@ function drawGradientRing(
     cy + sin(startAngle) * innerRadius
   );
 
+  // Locates the maximum and minimum temperature values for annotation
+  let maxTemp = Math.max(...temp);
+  let minTemp = Math.min(...temp);
+  let maxTempFound = false;
+  let minTempFound = false;
+
   for (
     let angle = startAngle;
     angle <= endAngle;
@@ -464,6 +515,16 @@ function drawGradientRing(
       totalLength,
       currentLength
     );
+
+    if (tempItem === maxTemp && !maxTempFound) {
+      maxX = x1;
+      maxY = y1;
+      maxTempFound = true;
+    } else if (tempItem === minTemp && !minTempFound) {
+      minX = x1;
+      minY = y1;
+      minTempFound = true;
+    }
   }
 
   if (PARAMS.toggleBlur) {
@@ -501,6 +562,9 @@ function drawAlphaRing(
   let lineThickness = PARAMS.lineThickness; // Thickness of each line segment
   let gap = PARAMS.percepGap; // Gap between each line segment
 
+  let maxPrecip = Math.round(Math.max(...perceps));
+  let maxPrecipFound = false;
+
   for (
     let angle = startAngle;
     angle <= endAngle;
@@ -519,6 +583,12 @@ function drawAlphaRing(
       percepsGraphic.fill(percepColor);
       percepsGraphic.noStroke();
       percepsGraphic.circle(posX, posY, PARAMS.circleSize);
+    }
+
+    if (percepItem === maxPrecip && !maxPrecipFound) {
+      rainX = cx + cos(angle) * (radius - amount * 5);
+      rainY = cy + sin(angle) * (radius - amount * 5);
+      maxPrecipFound = true;
     }
   }
   if (PARAMS.toggleBlur) {
@@ -587,11 +657,32 @@ const drawText = (textGraphic) => {
     725
   );
   textGraphic.textSize(22);
+  textGraphic.noStroke();
+  textGraphic.circle(maxX, maxY, 3);
+  textGraphic.circle(minX, minY, 3);
+  textGraphic.fill("blue");
+  //console.log("rainX", rainX, "rainY", rainY);
+  textGraphic.circle(rainX, rainY, 3);
   textGraphic.text(condition, 300, 690);
   textGraphic.pop();
 
   image(textGraphic, 0, 0);
 };
+
+function drawShadow() {
+  shadowGraphic.clear();
+  shadowGraphic.fill(0, 0, 0, 0);
+  shadowGraphic.stroke(255, 40);
+  shadowGraphic.strokeWeight(2);
+  shadowGraphic.rect(
+    PARAMS.window1X * _Width,
+    PARAMS.window1Y * _Height,
+    PARAMS.window1W * _Width,
+    PARAMS.window1H * _Height
+  );
+  shadow(shadowGraphic);
+  image(shadowGraphic, 0, 0);
+}
 
 const setupDebugPanel = () => {
   const shaders = pane.addFolder({
@@ -628,6 +719,10 @@ const setupDebugPanel = () => {
     {
       view: "checkbox",
     };
+  misc.addInput(PARAMS, "movementAmp", {
+    min: 0,
+    max: 1,
+  });
   shaders.addInput(PARAMS, "toggleBlur", {
     view: "checkbox",
   });
@@ -650,8 +745,25 @@ const setupDebugPanel = () => {
   });
   shaders.addInput(PARAMS, "distortion", {
     min: 0,
-    max: 10,
+    max: 100,
   });
+  shaders.addInput(PARAMS, "window1X", {
+    min: 0,
+    max: 1,
+  });
+  shaders.addInput(PARAMS, "window1Y", {
+    min: 0,
+    max: 1,
+  });
+  shaders.addInput(PARAMS, "window1W", {
+    min: 0,
+    max: 1,
+  });
+  shaders.addInput(PARAMS, "window1H", {
+    min: 0,
+    max: 1,
+  });
+
   temperature.addInput(PARAMS, "angleStep", {
     min: 0,
     max: 0.5,
@@ -725,3 +837,30 @@ const setupDebugPanel = () => {
     max: _Height,
   });
 };
+
+function typeWriter(string) {
+  let currentString = string.substring(0, currentCharacter);
+  push();
+  fill(255);
+  noStroke();
+  pop();
+
+  push();
+  textAlign(LEFT, TOP);
+  fill(30);
+
+  textFont(spectralElLt);
+  textSize(82);
+  text("26ºc ~ 35ºc", 60, 40);
+
+  //text(currentString, 10, 10, width, height);
+  pop();
+  currentCharacter += 5;
+}
+
+function shadow(graphic) {
+  graphic.drawingContext.shadowOffsetX = 4;
+  graphic.drawingContext.shadowOffsetY = 4;
+  graphic.drawingContext.shadowBlur = 10;
+  graphic.drawingContext.shadowColor = color(0, 27, 200, 100);
+}
