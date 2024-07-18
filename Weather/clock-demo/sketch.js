@@ -106,6 +106,8 @@ const PARAMS = {
   animate: true,
   clockSpeed: 18,
   easingStrength: 4,
+  translate: { x: 0, y: 0 },
+  scale: 1,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -205,6 +207,8 @@ async function setup() {
 
 function draw() {
   clear();
+  push(); // ring translation
+  translate(PARAMS.translate.x, PARAMS.translate.y);
   background(PARAMS.bg);
 
   textSize(50);
@@ -224,7 +228,6 @@ function draw() {
   fill(color("#7E3328"));
   glassShader.setUniform("bands", PARAMS.bands);
   glassShader.setUniform("distortion", PARAMS.distortion);
-  push();
   if (PARAMS.movement) {
     xOffset += 0.0005 * motion;
     yOffset += 0.0005 * motion;
@@ -232,24 +235,16 @@ function draw() {
 
   let xOffset1 = xOffset;
   let yOffset1 = yOffset;
-  let xOffset2 = xOffset + 1000; // Add a large number to get different noise values
-  let yOffset2 = yOffset + 1000;
-  let xOffset3 = xOffset + 2000;
-  let yOffset3 = yOffset + 2000;
 
   let xMovement1 = PARAMS.movement ? (noise(xOffset1) - 0.5) * width : 0;
   let yMovement1 = PARAMS.movement ? (noise(yOffset1) - 0.5) * height : 0;
 
-  let xMovement2 = PARAMS.movement ? (noise(xOffset2) - 0.5) * width : 0;
-  let yMovement2 = PARAMS.movement ? (noise(yOffset2) - 0.5) * height : 0;
-
-  let xMovement3 = PARAMS.movement ? (noise(xOffset3) - 0.5) * width : 0;
-  let yMovement3 = PARAMS.movement ? (noise(yOffset3) - 0.5) * height : 0;
+  push();
+  translate(PARAMS.pos1X + xMovement1, PARAMS.pos1Y + yMovement1);
+  scale(PARAMS.scale);
+  translate(-(PARAMS.pos1X + xMovement1), -(PARAMS.pos1Y + yMovement1));
 
   drawClock(PARAMS.pos1X + xMovement1, PARAMS.pos1Y + yMovement1);
-
-  // First climate ring
-  push();
   drawClimateRing(
     PARAMS.pos1X + xMovement1,
     PARAMS.pos1Y + yMovement1,
@@ -266,11 +261,9 @@ function draw() {
   if (PARAMS.glassFilter) {
     filter(glassShader);
   }
-  // drawText(textGraphic);
-  //image(cloudIcon, 500, 270, 90, 56);
-  if (PARAMS.animate) {
-    animate();
-  }
+
+  pop(); // ring translation
+  drawText(textGraphic);
 }
 
 // -------------------- UTILS -------------------------------
@@ -470,7 +463,6 @@ function drawAlphaRing(
 }
 
 function drawClock(x, y) {
-  let s = map(second(), 0, 60, 0, TWO_PI) - HALF_PI;
   let m = map(PARAMS.minute, 0, 60, 0, TWO_PI) - HALF_PI;
   let h =
     map(hour(), 0, 12, 0, TWO_PI) -
@@ -479,6 +471,9 @@ function drawClock(x, y) {
 
   conicCircle(x, y, PARAMS.clockSize + 30, [minuteColor, coldColor], m);
   conicCircle(x, y, PARAMS.clockSize, [hourColor, coldColor], h);
+  if (PARAMS.animate) {
+    animate();
+  }
 }
 
 function drawUnit(
@@ -790,6 +785,14 @@ const setupDebugPanel = () => {
     min: 0,
     max: 10,
   });
+  misc.addInput(PARAMS, "scale", {
+    min: 0.001,
+    max: 5,
+  });
+  misc.addInput(PARAMS, "translate", {
+    x: { min: -_Width, max: _Width },
+    y: { min: -_Height, max: _Height },
+  });
 };
 
 // ref https://github.com/Creativeguru97/YouTube_tutorial/blob/master/p5_hacks/Gradient_effect/conical_gradient/sketch.js
@@ -820,10 +823,6 @@ const precipitation1 = [
   0.01, 0.01, 0.03, 0.07, 0.07, 0.11, 0.44, 0.44, 0.51, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0,
 ];
-
-//function draw() {
-
-//}
 
 function conicCircle(x, y, r, colors, angle) {
   const ctx = drawingContext;
