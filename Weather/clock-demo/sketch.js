@@ -12,6 +12,8 @@ let tempGraphic1, tempGraphic2, tempGraphic3;
 let percepsGraphic1, percepsGraphic2, percepsGraphic3;
 let hourColor, minuteColor, secondColor;
 
+let timeLine;
+
 const _Range = 11;
 
 let textGraphic;
@@ -107,7 +109,9 @@ const PARAMS = {
   clockSpeed: 18,
   easingStrength: 4,
   translate: { x: 0, y: 0 },
-  scale: 1,
+  unitScale: 1,
+  alphaScale: 1,
+  gradientScale: 1,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -233,21 +237,15 @@ function draw() {
     yOffset += 0.0005 * motion;
   }
 
-  let xOffset1 = xOffset;
-  let yOffset1 = yOffset;
+  push(); // unit scaling
+  translate(_Width / 2, _Height / 2);
+  scale(PARAMS.unitScale);
+  translate(-(_Width / 2), -(_Height / 2));
 
-  let xMovement1 = PARAMS.movement ? (noise(xOffset1) - 0.5) * width : 0;
-  let yMovement1 = PARAMS.movement ? (noise(yOffset1) - 0.5) * height : 0;
-
-  push();
-  translate(PARAMS.pos1X + xMovement1, PARAMS.pos1Y + yMovement1);
-  scale(PARAMS.scale);
-  translate(-(PARAMS.pos1X + xMovement1), -(PARAMS.pos1Y + yMovement1));
-
-  drawClock(PARAMS.pos1X + xMovement1, PARAMS.pos1Y + yMovement1);
+  drawClock(_Width / 2, _Height / 2);
   drawClimateRing(
-    PARAMS.pos1X + xMovement1,
-    PARAMS.pos1Y + yMovement1,
+    _Width / 2,
+    _Height / 2,
     240,
     tempGraphic1,
     percepsGraphic1,
@@ -256,7 +254,7 @@ function draw() {
     hotColor,
     coldColor
   );
-  pop();
+  pop(); // unit scaling
 
   if (PARAMS.glassFilter) {
     filter(glassShader);
@@ -264,6 +262,10 @@ function draw() {
 
   pop(); // ring translation
   drawText(textGraphic);
+
+  if (PARAMS.animate) {
+    animate();
+  }
 }
 
 // -------------------- UTILS -------------------------------
@@ -306,9 +308,14 @@ function drawClimateRing(
     colorCold,
     tempGraphic,
     graphicBlur,
-    tempRingSize
+    tempRingSize,
+    timeLine
   );
 
+  push();
+  translate(cx, cy);
+  scale(PARAMS.alphaScale);
+  translate(-cx, -cy);
   drawAlphaRing(
     cx,
     cy,
@@ -320,8 +327,10 @@ function drawClimateRing(
     coldColor,
     percepsGraphic,
     graphicBlur,
-    tempRingSize
+    tempRingSize,
+    timeLine
   );
+  pop();
 }
 
 function drawGradientRing(
@@ -383,21 +392,25 @@ function drawGradientRing(
     let tempY = map(tempItem, minTemp, maxTemp, startY, endY);
     let currentLength = dist(tempX, tempY, startX, startY);
 
-    drawUnit(
-      tempGraphic,
-      tempX,
-      tempY,
-      startX,
-      startY,
-      startColor,
-      endColor,
-      totalLength,
-      currentLength,
-      angle,
-      tempItem,
-      endX,
-      endY
-    );
+    const easeInOutProgress = animateGradientRing(timeLine, PARAMS.clockSpeed);
+    const animatedEndAngle = map(easeInOutProgress, 0, 1, startAngle, endAngle);
+    if (angle <= animatedEndAngle) {
+      drawUnit(
+        tempGraphic,
+        tempX,
+        tempY,
+        startX,
+        startY,
+        startColor,
+        endColor,
+        totalLength,
+        currentLength,
+        angle,
+        tempItem,
+        endX,
+        endY
+      );
+    }
   }
 
   if (PARAMS.toggleBlur) {
@@ -419,9 +432,9 @@ function drawAlphaRing(
   endColor,
   percepsGraphic,
   graphicBlur,
-  size
+  size,
+  timeLine
 ) {
-  // Create a graphics buffer for the ring
   percepsGraphic.clear();
   percepsGraphic.angleMode(RADIANS);
   const radius = innerRadius - PARAMS.ringGap;
@@ -432,33 +445,34 @@ function drawAlphaRing(
   );
   let adjustedAngleStep = totalAngle / numberOfSteps;
 
-  let lineThickness = PARAMS.lineThickness; // Thickness of each line segment
-  let gap = PARAMS.percepGap; // Gap between each line segment
+  const easeInOutProgress = animateAlphaRing(timeLine, PARAMS.clockSpeed);
+  const animatedEndAngle = map(easeInOutProgress, 0, 1, startAngle, endAngle);
 
   for (
     let angle = startAngle;
     angle <= endAngle;
-    angle += adjustedAngleStep + radians(gap)
+    angle += adjustedAngleStep + radians(PARAMS.percepGap)
   ) {
-    percepsGraphic.strokeWeight(lineThickness);
     let angleToTime = map(angle, startAngle, endAngle, 0, _Range);
-
     let percepItem = perceps[Math.round(angleToTime)];
     let amount = Math.round(map(percepItem, 0, 1, 0, 10));
-    for (let i = 0; i < amount; i++) {
-      let posX = cx + cos(angle) * (radius - i * 5);
-      let posY = cy + sin(angle) * (radius - i * 5);
-      const percepColor = color("#0057FF");
-      percepColor.setAlpha(55 + i * 20);
-      percepsGraphic.fill(percepColor);
-      percepsGraphic.noStroke();
-      percepsGraphic.circle(posX, posY, PARAMS.circleSize);
+
+    if (angle <= animatedEndAngle) {
+      for (let i = 0; i < amount; i++) {
+        let posX = cx + cos(angle) * (radius - i * 5);
+        let posY = cy + sin(angle) * (radius - i * 5);
+        const percepColor = color("#0057FF");
+        percepColor.setAlpha(55 + i * 20);
+        percepsGraphic.fill(percepColor);
+        percepsGraphic.noStroke();
+        percepsGraphic.circle(posX, posY, PARAMS.circleSize);
+      }
     }
   }
+
   if (PARAMS.toggleBlur) {
-    percepsGraphic.filter(BLUR, graphicBlur); // Apply blur effect
+    percepsGraphic.filter(BLUR, graphicBlur);
   }
-  // Draw the blurred ring onto the main canvas
   image(percepsGraphic, 0, 0);
 }
 
@@ -471,9 +485,6 @@ function drawClock(x, y) {
 
   conicCircle(x, y, PARAMS.clockSize + 30, [minuteColor, coldColor], m);
   conicCircle(x, y, PARAMS.clockSize, [hourColor, coldColor], h);
-  if (PARAMS.animate) {
-    animate();
-  }
 }
 
 function drawUnit(
@@ -785,7 +796,15 @@ const setupDebugPanel = () => {
     min: 0,
     max: 10,
   });
-  misc.addInput(PARAMS, "scale", {
+  misc.addInput(PARAMS, "unitScale", {
+    min: 0.001,
+    max: 5,
+  });
+  misc.addInput(PARAMS, "alphaScale", {
+    min: 0.001,
+    max: 5,
+  });
+  misc.addInput(PARAMS, "gradientScale", {
     min: 0.001,
     max: 5,
   });
@@ -867,7 +886,7 @@ function conicCircle(x, y, r, colors, angle) {
 }
 
 function animate() {
-  const timeLine = millis();
+  timeLine = millis();
   animateClock(timeLine, PARAMS.clockSpeed);
 }
 
@@ -879,6 +898,24 @@ function animateClock(timeLine, speed = 1) {
   const easeInOutProgress = easeInOutQuad(loopProgress, PARAMS.easingStrength);
   PARAMS.minute = map(easeInOutProgress, 0, 1, 0, 60);
   PARAMS.clockFade = easeInOutProgress;
+}
+
+function animateAlphaRing(timeLine, speed = 1) {
+  const loopDuration = 60000;
+  const totalProgress = (timeLine * speed) / loopDuration;
+  const currentLoop = Math.floor(totalProgress);
+  const loopProgress = totalProgress - currentLoop;
+  const easeInOutProgress = easeInOutQuad(loopProgress, PARAMS.easingStrength);
+  return easeInOutProgress;
+}
+
+function animateGradientRing(timeLine, speed = 1) {
+  const loopDuration = 60000;
+  const totalProgress = (timeLine * speed) / loopDuration;
+  const currentLoop = Math.floor(totalProgress);
+  const loopProgress = totalProgress - currentLoop;
+  const easeInOutProgress = easeInOutQuad(loopProgress, PARAMS.easingStrength);
+  return easeInOutProgress;
 }
 
 function easeInOutQuad(t, strength = 2) {
