@@ -12,6 +12,8 @@ let tempGraphic1, tempGraphic2, tempGraphic3;
 let percepsGraphic1, percepsGraphic2, percepsGraphic3;
 let hourColor, minuteColor, secondColor;
 
+let cloudImage;
+
 let timeLine;
 
 const _Range = 11;
@@ -108,10 +110,11 @@ const PARAMS = {
   animate: true,
   clockSpeed: 18,
   easingStrength: 4,
-  translate: { x: 0, y: 0 },
+  translate: { x: 200, y: 0 },
   unitScale: 1,
   alphaScale: 1,
   gradientScale: 1,
+  summary: true,
 };
 var cloud;
 let forecast = [21, 25, 0.7]; // time, temp, humidity;
@@ -133,8 +136,9 @@ perceps = perceps.splice(12, 23);
 const weatherData = [];
 let ys = [];
 let amount = 30;
-let fontMono, fontSerif, abcOracleLight, abcOracleGreek;
+let fontMono, fontSerif, abcOracleLight, abcOracleGreek, kazimirLI;
 let date = new Date();
+let accentColor = "#001BC8";
 let formattedTime =
   date.getHours() +
   ":" +
@@ -148,6 +152,10 @@ function preload() {
   abcOracleGreek = loadFont("assets/fonts/ABCOracleGreek-Md-Trial.ttf");
   font = loadFont(
     "https://fonts.gstatic.com/s/prompt/v10/-W_6XJnvUD7dzB2KZeKka2MrUZEtdzow.ttf"
+  );
+  kazimirLI = loadFont("assets/fonts/Kazimir-Light-Italic.ttf");
+  cloudImage = loadImage(
+    "https://www.aopa.org/-/media/Images/AOPA-Main/News-and-Media/Publications/Flight-Training-Magazine/2010f/2010f_pf_wx/2010f_pf_wx_16x9.jpg"
   );
   cloudIcon = loadImage("./assets/imgs/cloudicon.png");
   requestJsonData();
@@ -266,6 +274,9 @@ function draw() {
   if (PARAMS.animate) {
     animate();
   }
+  if (PARAMS.summary) {
+    typeWriter();
+  }
 }
 
 // -------------------- UTILS -------------------------------
@@ -297,6 +308,16 @@ function drawClimateRing(
 ) {
   let outerRadius = radius;
   let innerRadiusTemp = radius - PARAMS.tempRingInnerSize; // Adjusted to remove gap
+
+  push();
+  translate(cx, cy);
+  const easeInOutProgressGradient = animateGradientScale(
+    timeLine,
+    PARAMS.clockSpeed
+  );
+  const scaleGradient = map(easeInOutProgressGradient, 0, 1, 2, 1);
+  scale(scaleGradient);
+  translate(-cx, -cy);
   drawGradientRing(
     cx,
     cy,
@@ -311,10 +332,12 @@ function drawClimateRing(
     tempRingSize,
     timeLine
   );
+  pop();
 
   push();
   translate(cx, cy);
-  scale(PARAMS.alphaScale);
+  const easeInOutProgressAlpha = animateAlphaScale(timeLine, PARAMS.clockSpeed);
+  scale(easeInOutProgressAlpha);
   translate(-cx, -cy);
   drawAlphaRing(
     cx,
@@ -812,6 +835,9 @@ const setupDebugPanel = () => {
     x: { min: -_Width, max: _Width },
     y: { min: -_Height, max: _Height },
   });
+  misc.addInput(PARAMS, "summary", {
+    view: "checkbox",
+  });
 };
 
 // ref https://github.com/Creativeguru97/YouTube_tutorial/blob/master/p5_hacks/Gradient_effect/conical_gradient/sketch.js
@@ -918,8 +944,102 @@ function animateGradientRing(timeLine, speed = 1) {
   return easeInOutProgress;
 }
 
+function animateAlphaScale(timeLine, speed = 1) {
+  const loopDuration = 60000;
+  const totalProgress = (timeLine * speed) / loopDuration;
+  const currentLoop = Math.floor(totalProgress);
+  const loopProgress = totalProgress - currentLoop;
+  const easeInOutProgress = easeInOutQuad(loopProgress, PARAMS.easingStrength);
+  return easeInOutProgress;
+}
+
+function animateGradientScale(timeLine, speed = 1) {
+  const loopDuration = 60000;
+  const totalProgress = (timeLine * speed) / loopDuration;
+  const currentLoop = Math.floor(totalProgress);
+  const loopProgress = totalProgress - currentLoop;
+  const easeInOutProgress = easeOutBack(loopProgress, 1.2);
+  return easeInOutProgress;
+}
+
 function easeInOutQuad(t, strength = 2) {
   return t < 0.5
     ? Math.pow(2 * t, strength) / 2
     : 1 - Math.pow(2 * (1 - t), strength) / 2;
+}
+
+function easeInOutBack(t, strength = 1.70158) {
+  const c1 = 1.70158;
+  const c2 = c1 * 1.525;
+
+  return t < 0.5
+    ? (Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2
+    : (Math.pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
+}
+
+function easeOutBack(t, intensity = 1) {
+  const c1 = 1.70158 * intensity;
+  const c3 = c1 + 1;
+
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+function typeWriter() {
+  push();
+  fill(255);
+  noStroke();
+  pop();
+
+  push();
+  textAlign(LEFT, TOP);
+  fill(30);
+  textSize(32);
+
+  textFont(abcOracleLight);
+  text("Expect", 60, 60);
+  text("today with temperatures", 140, 100);
+  text("peeking at", 60, 140);
+  text("and", 345, 140);
+  text("dipping to", 60, 183);
+  text("tonight", 310, 183);
+  text("with a", 60, 340);
+  text("chance of", 230, 340);
+  textFont(kazimirLI);
+  text("BROKEN CLOUDS", 185, 67);
+  text("RAIN", 70, 390);
+  text("IN THE", 158, 390);
+  text("AFTERNOON", 275, 390);
+  noFill();
+  stroke(color(accentColor));
+  rect(173, 62, 280, 35, 20); // broken cloud
+  rect(60, 387, 95, 35, 20); // rain
+  rect(265, 387, 200, 35, 20); // afternoon
+  strokeWeight(2);
+  image(cloudImage, 60, 100, 70, 42);
+
+  if (PARAMS.annotation1) {
+    drawAnno1();
+  }
+
+  if (PARAMS.annotation2) {
+    drawAnno2();
+  }
+
+  textFont(kazimirLI);
+  noStroke();
+  fill(accentColor);
+  rect(224, 142, 115, 40, 10); // 35
+  rect(224, 185, 75, 40, 10); // 25
+  rect(150, 342, 75, 40, 10); // 50
+  fill(240);
+  text("35ºC", 233, 149);
+  text("25ºC", 230, 193);
+  text("50%", 160, 347);
+
+  textFont("Verdana");
+  text("🔥", 300, 149);
+
+  //text(currentString, 10, 10, width, height);
+  pop();
+  //currentCharacter += 5;
 }

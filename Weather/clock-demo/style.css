@@ -68,6 +68,7 @@ canvas{
   left: 20px;
 }
 
+
 #weather h1{
   font-family: "MaxiRoundVar";
   font-size: 2rem;
@@ -126,7 +127,7 @@ canvas{
 }
 
 #checkbox-container {
-  display:flex;
+  display:none;
   color:rgb(0, 27, 200);
   align-items: center;
   gap: 4px;
