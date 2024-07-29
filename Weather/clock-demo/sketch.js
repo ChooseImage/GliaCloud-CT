@@ -339,20 +339,20 @@ function drawClimateRing(
   const easeInOutProgressAlpha = animateAlphaScale(timeLine, PARAMS.clockSpeed);
   scale(easeInOutProgressAlpha);
   translate(-cx, -cy);
-  drawAlphaRing(
-    cx,
-    cy,
-    outerRadius,
-    innerRadiusTemp,
-    -PI / 2,
-    1.5 * PI,
-    hotColor,
-    coldColor,
-    percepsGraphic,
-    graphicBlur,
-    tempRingSize,
-    timeLine
-  );
+  // drawAlphaRing(
+  //   cx,
+  //   cy,
+  //   outerRadius,
+  //   innerRadiusTemp,
+  //   -PI / 2,
+  //   1.5 * PI,
+  //   hotColor,
+  //   coldColor,
+  //   percepsGraphic,
+  //   graphicBlur,
+  //   tempRingSize,
+  //   timeLine
+  // );
   pop();
 }
 
@@ -461,7 +461,7 @@ function drawAlphaRing(
   percepsGraphic.clear();
   percepsGraphic.angleMode(RADIANS);
   const radius = innerRadius - PARAMS.ringGap;
-
+  console.log("drawing alpha ring");
   let totalAngle = endAngle - startAngle;
   let numberOfSteps = Math.floor(
     totalAngle / (PARAMS.percepsAngleStep + radians(PARAMS.percepGap))
