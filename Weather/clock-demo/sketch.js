@@ -388,7 +388,7 @@ function drawGradientRing(
   let totalLength = R - innerRadius;
 
   for (let angle = startAngle; angle <= endAngle; angle += adjustedAngleStep) {
-    tempGraphic.strokeWeight(lineThickness);
+    //tempGraphic.strokeWeight(lineThickness);
     let angleToTime = map(angle, startAngle, endAngle, 0, _Range);
 
     let tempItem = temp[Math.round(angleToTime)];
