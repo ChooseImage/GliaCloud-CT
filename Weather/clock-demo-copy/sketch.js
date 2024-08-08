@@ -6,10 +6,12 @@ let _PRECIPS = [
   0.01, 0.01, 0.03, 0.07, 0.07, 0.11, 0.44, 0.44, 0.51, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0,
 ];
+let animationStartTime = null;
+let animationDelayStart = null;
 let _TEMPLATE = 1;
 let _BGCOLOR = "#FFF5F5";
 let _MINUTE = 0;
-let _CLOCKSIZE = 100;
+let _CLOCKSIZE = 140;
 let _CLOCKFADE = 1;
 let _TEMPINNERSIZE = 20;
 let _CLOCKSPEED = 18;
@@ -50,7 +52,9 @@ function setup() {
 function draw() {
   background(_BGCOLOR);
   noStroke();
-  drawClock(_WIDTH / 2, _HEIGHT / 2);
+  if (_TEMPLATE === 1) {
+    drawClock(_WIDTH / 2, _HEIGHT / 2);
+  }
   drawClimateRing(
     _WIDTH / 2,
     _HEIGHT / 2,
@@ -240,7 +244,7 @@ function drawGradientRing(
   const minTemp = Math.min(...temp);
   const R = size * Math.pow(maxTemp, _TEMPRINGPOW);
   let totalLength = R - innerRadius;
-  totalLength = 30;
+  totalLength = 50;
 
   for (let angle = startAngle; angle <= endAngle; angle += adjustedAngleStep) {
     let angleToTime = map(angle, startAngle, endAngle, 0, _Range);
@@ -412,22 +416,52 @@ function gradientLine(
   ctx.stroke();
 }
 
-function animateGradientRing(timeLine, speed = 1) {
-  const loopDuration = 60000;
-  const totalProgress = (timeLine * speed) / loopDuration;
-  const currentLoop = Math.floor(totalProgress);
-  const loopProgress = totalProgress - currentLoop;
-  const easeInOutProgress = easeInOutQuad(loopProgress, _EASINGSTRENGTH);
-  return easeInOutProgress;
+function animateGradientRing(timeLine, speed = 1, delay = 0) {
+  if (!animationDelayStart) {
+    animationDelayStart = timeLine;
+  }
+
+  if (timeLine - animationDelayStart < delay) {
+    return 0; // Still in delay period, return initial state
+  }
+
+  if (!animationStartTime) {
+    animationStartTime = timeLine - delay;
+  }
+
+  const animationDuration = 60000 / speed; // Duration in milliseconds
+  const elapsedTime = timeLine - animationStartTime - delay;
+
+  if (elapsedTime >= animationDuration) {
+    return 1; // Animation complete, stay at the end
+  }
+
+  const progress = elapsedTime / animationDuration;
+  return easeInOutQuad(progress, 1.2);
 }
 
-function animateGradientScale(timeLine, speed = 1) {
-  const loopDuration = 60000;
-  const totalProgress = (timeLine * speed) / loopDuration;
-  const currentLoop = Math.floor(totalProgress);
-  const loopProgress = totalProgress - currentLoop;
-  const easeInOutProgress = easeOutBack(loopProgress, 1.2);
-  return easeInOutProgress;
+function animateGradientScale(timeLine, speed = 1, delay = 0) {
+  if (!animationDelayStart) {
+    animationDelayStart = timeLine;
+  }
+
+  if (timeLine - animationDelayStart < delay) {
+    return 0; // Still in delay period, return initial state
+  }
+
+  if (!animationStartTime) {
+    animationStartTime = timeLine - delay;
+  }
+
+  const animationDuration = 60000 / speed; // Duration in milliseconds
+  const elapsedTime = timeLine - animationStartTime - delay;
+
+  if (elapsedTime >= animationDuration) {
+    return 1; // Animation complete, stay at the end
+  }
+
+  const progress = elapsedTime / animationDuration;
+  return easeOutBack(progress, 1.2);
 }
 
 function animate() {
@@ -437,12 +471,34 @@ function animate() {
   }
 }
 
-function animateClock(timeLine, speed = 1) {
-  const loopDuration = 60000; // 60 seconds in milliseconds
-  const totalProgress = (timeLine * speed) / loopDuration;
-  const currentLoop = Math.floor(totalProgress);
-  const loopProgress = totalProgress - currentLoop;
-  const easeInOutProgress = easeInOutQuad(loopProgress, _EASINGSTRENGTH);
+function animateClock(timeLine, speed = 1, delay = 2000) {
+  if (!animationDelayStart) {
+    animationDelayStart = timeLine;
+  }
+
+  if (timeLine - animationDelayStart < delay) {
+    _MINUTE = 0;
+    _CLOCKFADE = 0;
+    return; // Still in delay period, keep initial state
+  }
+
+  if (!animationStartTime) {
+    animationStartTime = timeLine - delay;
+  }
+
+  const animationDuration = 60000 / speed; // Duration in milliseconds
+  const elapsedTime = timeLine - animationStartTime - delay;
+
+  if (elapsedTime >= animationDuration) {
+    // Animation complete, stay at the end
+    _MINUTE = 60;
+    _CLOCKFADE = 1;
+    return;
+  }
+
+  const progress = elapsedTime / animationDuration;
+  const easeInOutProgress = easeInOutQuad(progress, _EASINGSTRENGTH);
+
   _MINUTE = map(easeInOutProgress, 0, 1, 0, 60);
   _CLOCKFADE = easeInOutProgress;
 }
@@ -460,22 +516,42 @@ function easeInOutQuad(t, strength = 2) {
     : 1 - Math.pow(2 * (1 - t), strength) / 2;
 }
 
-function animateAlphaScale(timeLine, speed = 1) {
-  const loopDuration = 60000;
-  const totalProgress = (timeLine * speed) / loopDuration;
-  const currentLoop = Math.floor(totalProgress);
-  const loopProgress = totalProgress - currentLoop;
-  const easeInOutProgress = easeInOutQuad(loopProgress, _EASINGSTRENGTH);
-  return easeInOutProgress;
+function animateAlphaScale(timeLine, speed = 1, delay = 0) {
+  if (!animationDelayStart) {
+    animationDelayStart = timeLine;
+  }
+  if (timeLine - animationDelayStart < delay) {
+    return 0; // Still in delay period, return initial state
+  }
+  if (!animationStartTime) {
+    animationStartTime = timeLine - delay;
+  }
+  const animationDuration = 60000 / speed; // Duration in milliseconds
+  const elapsedTime = timeLine - animationStartTime - delay;
+  if (elapsedTime >= animationDuration) {
+    return 1; // Animation complete, stay at the end
+  }
+  const progress = elapsedTime / animationDuration;
+  return easeOutBack(progress, 1.2);
 }
 
-function animateAlphaRing(timeLine, speed = 1) {
-  const loopDuration = 60000;
-  const totalProgress = (timeLine * speed) / loopDuration;
-  const currentLoop = Math.floor(totalProgress);
-  const loopProgress = totalProgress - currentLoop;
-  const easeInOutProgress = easeInOutQuad(loopProgress, _EASINGSTRENGTH);
-  return easeInOutProgress;
+function animateAlphaRing(timeLine, speed = 1, delay = 0) {
+  if (!animationDelayStart) {
+    animationDelayStart = timeLine;
+  }
+  if (timeLine - animationDelayStart < delay) {
+    return 0; // Still in delay period, return initial state
+  }
+  if (!animationStartTime) {
+    animationStartTime = timeLine - delay;
+  }
+  const animationDuration = 60000 / speed; // Duration in milliseconds
+  const elapsedTime = timeLine - animationStartTime - delay;
+  if (elapsedTime >= animationDuration) {
+    return 1; // Animation complete, stay at the end
+  }
+  const progress = elapsedTime / animationDuration;
+  return easeInOutQuad(progress, 1.2);
 }
 
 function keyPressed() {
