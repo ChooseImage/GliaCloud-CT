@@ -269,13 +269,13 @@ function draw() {
   }
 
   pop(); // ring translation
-  drawText(textGraphic);
+  //drawText(textGraphic); the text at bottom right
 
   if (PARAMS.animate) {
     animate();
   }
   if (PARAMS.summary) {
-    typeWriter();
+    //typeWriter(); // the description
   }
 }
 
@@ -339,20 +339,20 @@ function drawClimateRing(
   const easeInOutProgressAlpha = animateAlphaScale(timeLine, PARAMS.clockSpeed);
   scale(easeInOutProgressAlpha);
   translate(-cx, -cy);
-  // drawAlphaRing(
-  //   cx,
-  //   cy,
-  //   outerRadius,
-  //   innerRadiusTemp,
-  //   -PI / 2,
-  //   1.5 * PI,
-  //   hotColor,
-  //   coldColor,
-  //   percepsGraphic,
-  //   graphicBlur,
-  //   tempRingSize,
-  //   timeLine
-  // );
+  drawAlphaRing(
+    cx,
+    cy,
+    outerRadius,
+    innerRadiusTemp,
+    -PI / 2,
+    1.5 * PI,
+    hotColor,
+    coldColor,
+    percepsGraphic,
+    graphicBlur,
+    tempRingSize,
+    timeLine
+  );
   pop();
 }
 
@@ -566,6 +566,7 @@ function drawUnit(
     Math.abs((angle % interval) - interval) < tolerance ||
     Math.abs(angle % interval) < tolerance
   ) {
+    graphic.fill(color("#B591E4"));
     graphic.text(
       tempItem.toString(),
       endX + cos(angle) * textOffset,

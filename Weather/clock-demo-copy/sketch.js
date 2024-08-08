@@ -1,7 +1,17 @@
+let _TEMPS = [
+  27, 27, 26, 26, 26, 26, 26, 28, 30, 32, 33, 34, 35, 35, 36, 35, 34, 33, 32,
+  30, 29, 29, 28, 28,
+];
+let _PRECIPS = [
+  0.01, 0.01, 0.03, 0.07, 0.07, 0.11, 0.44, 0.44, 0.51, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0,
+];
+let _TEMPLATE = 1;
+let _BGCOLOR = "#FFF5F5";
 let _MINUTE = 0;
 let _CLOCKSIZE = 100;
 let _CLOCKFADE = 1;
-let _TEMPINNERSIZE = 40;
+let _TEMPINNERSIZE = 20;
 let _CLOCKSPEED = 18;
 let _ANGLESTEP = 0.25;
 let _GAP = 0.16;
@@ -9,24 +19,24 @@ let _EASINGSTRENGTH = 4;
 let _TEMPRINGPOW = 1.14;
 let _WIDTH = 400;
 let _HEIGHT = 400;
-let _Width = 400;
-let _Height = 400;
 let tempGraphic1, percepsGraphic1;
 let timeLine;
 const _Range = 11;
 
-let temp = [
-  27, 27, 26, 26, 26, 26, 26, 28, 30, 32, 33, 34, 35, 35, 36, 35, 34, 33, 32,
-  30, 29, 29, 28, 28,
-];
+let temp = _TEMPS;
+
+let perceps = _PRECIPS;
+
 temp = temp.splice(12, 23);
+
+//perceps = perceps.splice(12, 23);
 
 let hourColor, minuteColor, secondColor;
 let tempGraphic, clockGraphic;
 let coldColor, hotColor;
 
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(_WIDTH, _HEIGHT);
 
   minuteColor = color(148, 126, 176, 72);
   hourColor = color(148, 126, 176, 72);
@@ -34,15 +44,16 @@ function setup() {
   hotColor = color("#ff5050"); // red-orange
   tempGraphic1 = createGraphics(width, height);
   percepsGraphic1 = createGraphics(width, height);
+  _TEMPLATE = 1;
 }
 
 function draw() {
-  background(color("#FFF5F5"));
+  background(_BGCOLOR);
   noStroke();
   drawClock(_WIDTH / 2, _HEIGHT / 2);
   drawClimateRing(
-    _Width / 2,
-    _Height / 2,
+    _WIDTH / 2,
+    _HEIGHT / 2,
     140,
     tempGraphic1,
     percepsGraphic1,
@@ -66,6 +77,51 @@ function drawClock(x, y) {
   conicCircle(x, y, _CLOCKSIZE, [hourColor, coldColor], h);
 }
 
+function drawAlphaRing(
+  cx,
+  cy,
+  innerRadius,
+  startAngle,
+  endAngle,
+  percepsGraphic,
+  timeLine
+) {
+  percepsGraphic.clear();
+  percepsGraphic.angleMode(RADIANS);
+  const radius = innerRadius - 16;
+  let totalAngle = endAngle - startAngle;
+  let numberOfSteps = Math.floor(totalAngle / (0.07 + radians(0.1)));
+  let adjustedAngleStep = totalAngle / numberOfSteps;
+  let easeInOutProgress = 1;
+  if (_TEMPLATE === 1) {
+    easeInOutProgress = animateAlphaRing(timeLine, _CLOCKSPEED);
+  }
+  const animatedEndAngle = map(easeInOutProgress, 0, 1, startAngle, endAngle);
+
+  for (
+    let angle = startAngle;
+    angle <= endAngle;
+    angle += adjustedAngleStep + radians(0.1)
+  ) {
+    let angleToTime = map(angle, startAngle, endAngle, 0, _Range);
+    let percepItem = perceps[Math.round(angleToTime)];
+    let amount = Math.round(map(percepItem, 0, 1, 0, 10));
+
+    if (angle <= animatedEndAngle) {
+      for (let i = 0; i < amount; i++) {
+        let posX = cx + cos(angle) * (radius - i * 5);
+        let posY = cy + sin(angle) * (radius - i * 5);
+        const percepColor = color("#0057FF");
+        percepColor.setAlpha(55 + i * 20);
+        percepsGraphic.fill(percepColor);
+        percepsGraphic.noStroke();
+        percepsGraphic.circle(posX, posY, 2.74);
+      }
+    }
+  }
+  image(percepsGraphic, 0, 0);
+}
+
 function conicCircle(x, y, r, colors, angle) {
   const ctx = drawingContext;
 
@@ -82,7 +138,6 @@ function conicCircle(x, y, r, colors, angle) {
       startAngle = angle;
     }
   } catch (e) {
-    console.error(e);
     startAngle = angle;
   }
 
@@ -122,46 +177,55 @@ function drawClimateRing(
 
   push();
   translate(cx, cy);
-  const easeInOutProgressGradient = animateGradientScale(timeLine, _CLOCKSPEED);
-  //console.log(easeInOutProgressGradient);
+  let easeInOutProgressGradient = 1;
+  if (_TEMPLATE === 1) {
+    easeInOutProgressGradient = animateGradientScale(timeLine, _CLOCKSPEED);
+  }
   const scaleGradient = map(easeInOutProgressGradient, 0, 1, 2, 1);
   scale(scaleGradient);
   translate(-cx, -cy);
   drawGradientRing(
     cx,
     cy,
-    outerRadius,
     innerRadiusTemp,
     -PI / 2,
     1.5 * PI - 0.01,
     colorHot,
     colorCold,
     tempGraphic,
-    graphicBlur,
-    tempRingSize,
-    timeLine
+    tempRingSize
   );
   pop();
 
   push();
   translate(cx, cy);
-  const easeInOutProgressAlpha = animateAlphaScale(timeLine, _CLOCKSPEED);
+  let easeInOutProgressAlpha = 1;
+  if (_TEMPLATE === 1) {
+    easeInOutProgressAlpha = animateAlphaScale(timeLine, _CLOCKSPEED);
+  }
   scale(easeInOutProgressAlpha);
   translate(-cx, -cy);
+  drawAlphaRing(
+    cx,
+    cy,
+    innerRadiusTemp,
+    -PI / 2,
+    1.5 * PI,
+    percepsGraphic,
+    timeLine
+  );
   pop();
 }
 
 function drawGradientRing(
   cx,
   cy,
-  outerRadius,
   innerRadius,
   startAngle,
   endAngle,
   startColor,
   endColor,
   tempGraphic,
-  blur,
   size
 ) {
   // Create a graphics buffer for the ring
@@ -201,8 +265,10 @@ function drawGradientRing(
     let tempX = map(tempItem, minTemp, maxTemp, startX, endX);
     let tempY = map(tempItem, minTemp, maxTemp, startY, endY);
     let currentLength = dist(tempX, tempY, startX, startY);
-
-    const easeInOutProgress = animateGradientRing(timeLine, _CLOCKSPEED);
+    let easeInOutProgress = 1;
+    if (_TEMPLATE === 1) {
+      easeInOutProgress = animateGradientRing(timeLine, _CLOCKSPEED);
+    }
     const animatedEndAngle = map(easeInOutProgress, 0, 1, startAngle, endAngle);
     if (angle <= animatedEndAngle) {
       drawUnit(
@@ -366,7 +432,9 @@ function animateGradientScale(timeLine, speed = 1) {
 
 function animate() {
   timeLine = millis();
-  animateClock(timeLine, _CLOCKSPEED);
+  if (_TEMPLATE === 1) {
+    animateClock(timeLine, _CLOCKSPEED);
+  }
 }
 
 function animateClock(timeLine, speed = 1) {
@@ -401,4 +469,18 @@ function animateAlphaScale(timeLine, speed = 1) {
   return easeInOutProgress;
 }
 
-console.log("P5.js sketch loaded successfully");
+function animateAlphaRing(timeLine, speed = 1) {
+  const loopDuration = 60000;
+  const totalProgress = (timeLine * speed) / loopDuration;
+  const currentLoop = Math.floor(totalProgress);
+  const loopProgress = totalProgress - currentLoop;
+  const easeInOutProgress = easeInOutQuad(loopProgress, _EASINGSTRENGTH);
+  return easeInOutProgress;
+}
+
+function keyPressed() {
+  if (key === "k" || key === "K") {
+    saveCanvas("myCanvas", "png");
+    console.log("Canvas saved as PNG");
+  }
+}
