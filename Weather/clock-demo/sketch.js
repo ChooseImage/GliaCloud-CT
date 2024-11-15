@@ -999,7 +999,7 @@ function typeWriter() {
   textFont(abcOracleLight);
   text("Expect", 60, 60);
   text("today with temperatures", 140, 100);
-  text("peeking at", 60, 140);
+  text("peaking at", 60, 140);
   text("and", 345, 140);
   text("dipping to", 60, 183);
   text("tonight", 310, 183);
